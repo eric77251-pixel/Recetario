@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "234167949611",
+    "project_id": "recetario-8edd5",
+    "storage_bucket": "recetario-8edd5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:234167949611:android:8f56327ee05800a1b0cd6e",
+        "android_client_info": {
+          "package_name": "com.example.recetario"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCBc-IOOKQoKpVChXWMLZjltOjWbRHm35g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

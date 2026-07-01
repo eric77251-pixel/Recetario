@@ -2,15 +2,27 @@ package com.example.recetario.Modelos
 
 import android.os.Parcel
 import android.os.Parcelable
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class Receta(
+
  var id: String = "",
- var usuario: String = "",
+
+ @SerialName("usuario_id")
+ var usuarioId: String = "",
+
  var nombre: String = "",
+
  var descripcion: String = "",
+
+ @SerialName("imagen_url")
  var imagenUrl: String = "",
- var proceso: List<String> = emptyList(),
- var ingredientes: List<String> = emptyList()
+
+ @SerialName("fecha_creacion")
+ var fechaCreacion: String = ""
+
 ) : Parcelable {
 
  constructor(parcel: Parcel) : this(
@@ -19,25 +31,22 @@ data class Receta(
   parcel.readString() ?: "",
   parcel.readString() ?: "",
   parcel.readString() ?: "",
-  parcel.createStringArrayList() ?: emptyList(),
-  parcel.createStringArrayList() ?: emptyList()
+  parcel.readString() ?: ""
  )
 
  override fun writeToParcel(parcel: Parcel, flags: Int) {
   parcel.writeString(id)
-  parcel.writeString(usuario)
+  parcel.writeString(usuarioId)
   parcel.writeString(nombre)
   parcel.writeString(descripcion)
   parcel.writeString(imagenUrl)
-  parcel.writeStringList(proceso)
-  parcel.writeStringList(ingredientes)
+  parcel.writeString(fechaCreacion)
  }
 
- override fun describeContents(): Int {
-  return 0
- }
+ override fun describeContents(): Int = 0
 
  companion object CREATOR : Parcelable.Creator<Receta> {
+
   override fun createFromParcel(parcel: Parcel): Receta {
    return Receta(parcel)
   }

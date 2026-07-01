@@ -12,7 +12,12 @@ import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import com.example.recetario.Funciones.Authentication
 import com.example.recetario.Funciones.Validaciones
+import com.example.recetario.Manager.UsuarioManager
 import com.example.recetario.R
+import com.google.firebase.auth.FirebaseAuth
+import com.example.recetario.Modelos.Usuario
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 class RegistrarUsuario : Fragment() {
 
@@ -58,18 +63,58 @@ class RegistrarUsuario : Fragment() {
                 btnCrearUsuario.isEnabled = true
 
                 if (exito) {
+                    // Se obtiene el usario que se acaba de crear
+                    val firebaseUser = FirebaseAuth.getInstance().currentUser
 
-                    // Firebase inicia sesión automáticamente al crear un usuario
-                    Authentication.cerrarSesion()
+                    if (firebaseUser == null) {
 
-                    Toast.makeText(
-                        requireContext(),
-                        "Usuario creado correctamente",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                        Toast.makeText(
+                            requireContext(),
+                            "No se ha podido añadir los datos del usuario a la base de datos",
+                            Toast.LENGTH_SHORT
+                        ).show()
 
+                        return@crearUsuario
+                    }
+                    val usuario = Usuario(
+
+                        id = firebaseUser!!.uid,
+
+                        nombre = txtNombre.text.toString().trim(),
+
+                        apellido = txtApellido.text.toString().trim(),
+
+                        correo = firebaseUser.email ?: "",
+
+                        fotoPerfil = ""
+                    )
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        ///Se crea el usario en la supabase
+                        val guardado = UsuarioManager.crearUsuario(usuario)
+
+                        if (guardado) {
+                            // Firebase inicia sesión automáticamente al crear un usuario
+                            Authentication.cerrarSesion()
+
+                            Toast.makeText(
+                                requireContext(),
+                                "Usuario creado correctamente",
+                                Toast.LENGTH_SHORT
+                            ).show()
+
+                            parentFragmentManager.popBackStack()
+
+                        }
+                        else{
+                            AlertDialog.Builder(requireContext())
+                                .setTitle("Error")
+                                .setMessage(
+                                    mensaje ?: "El usuario se ha creado pero ha ocurrido un error al guardar sus datos"
+                                )
+                                .setPositiveButton("Aceptar", null)
+                                .show()
+                        }}
                     parentFragmentManager.popBackStack()
-
                 } else {
 
                     AlertDialog.Builder(requireContext())

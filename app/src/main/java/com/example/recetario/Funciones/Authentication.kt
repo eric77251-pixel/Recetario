@@ -49,5 +49,6 @@ object Authentication {
     fun cerrarSesion(){
         auth.signOut()
     }
+    fun obtenerUsuario()=auth.currentUser
 
 }

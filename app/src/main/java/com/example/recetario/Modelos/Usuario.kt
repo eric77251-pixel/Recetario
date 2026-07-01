@@ -1,11 +1,20 @@
 package com.example.recetario.Modelos
 
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Usuario(
+
     var id: String = "",
+
     var nombre: String = "",
+
     var apellido: String = "",
+
     var correo: String = "",
-    var fotoPerfil: String = "",
-    var favoritos: List<String> = emptyList(),
-    var recetasCreadas:List<String> = emptyList()
-    )
+
+    @SerialName("foto_perfil")
+    var fotoPerfil: String = ""
+
+)

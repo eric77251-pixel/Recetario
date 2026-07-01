@@ -15,6 +15,10 @@ import com.example.recetario.Actividades.MainActivity
 import com.example.recetario.Funciones.Validaciones
 import com.example.recetario.R
 import com.example.recetario.Funciones.Authentication
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import com.example.recetario.Manager.UsuarioManager
+import com.example.recetario.Funciones.Sesion
 
 
 class IniciarSesion : Fragment() {
@@ -98,31 +102,69 @@ class IniciarSesion : Fragment() {
             contraseña
         ) { exito, mensaje ->
 
-            // Vuelve a habilitar el botón
-            btnAcceder.isEnabled = true
+            if (!exito) {
 
-            if (exito) {
-
-                Toast.makeText(
-                    requireContext(),
-                    "Inicio de sesión exitoso",
-                    Toast.LENGTH_SHORT
-                ).show()
-
-                // Ir al Fragment de Recetas
-                (requireActivity() as MainActivity).cambiarFragmento(
-                    Recetas(),
-                    agregarAlBackStack = false,
-                    mostrarMenu = true
-                )
-
-            } else {
+                btnAcceder.isEnabled = true
 
                 Toast.makeText(
                     requireContext(),
                     mensaje ?: "Correo o contraseña incorrectos",
                     Toast.LENGTH_LONG
                 ).show()
+
+                return@iniciarSesion
+            }
+
+            // Usuario autenticado en Firebase
+            val firebaseUser = Authentication.obtenerUsuario()
+
+            if (firebaseUser == null) {
+
+                btnAcceder.isEnabled = true
+
+                Toast.makeText(
+                    requireContext(),
+                    "No se pudo obtener el usuario autenticado.",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                return@iniciarSesion
+            }
+
+            // Buscar los datos del usuario en Supabase
+            viewLifecycleOwner.lifecycleScope.launch {
+
+                val usuario = UsuarioManager.obtenerUsuario(firebaseUser.toString())
+
+                btnAcceder.isEnabled = true
+
+                if (usuario == null) {
+
+                    Toast.makeText(
+                        requireContext(),
+                        "No se encontró el usuario en la base de datos.",
+                        Toast.LENGTH_LONG
+                    ).show()
+
+                    Authentication.cerrarSesion()
+                    return@launch
+                }
+
+                // Guardar el usuario en memoria
+                Sesion.usuario = usuario
+
+                Toast.makeText(
+                    requireContext(),
+                    "Bienvenido ${usuario.nombre}",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                // Ir al fragmento principal
+                (requireActivity() as MainActivity).cambiarFragmento(
+                    Recetas(),
+                    agregarAlBackStack = false,
+                    mostrarMenu = true
+                )
             }
         }
     }

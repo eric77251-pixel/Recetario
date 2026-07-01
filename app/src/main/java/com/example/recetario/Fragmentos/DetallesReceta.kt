@@ -7,9 +7,16 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.example.recetario.Funciones.ZoomListener
+import com.example.recetario.Manager.IngredientesManager
+import com.example.recetario.Manager.PasosManager
+import com.example.recetario.Manager.UsuarioManager
 import com.example.recetario.Modelos.Receta
 import com.example.recetario.R
+import kotlinx.coroutines.launch
+import android.os.Build
+import coil.load
 
 class DetallesReceta : Fragment() {
 
@@ -50,24 +57,56 @@ class DetallesReceta : Fragment() {
         imgReceta.setOnTouchListener(ZoomListener(requireContext()))
 
         // 1. Recuperar el objeto Receta de los argumentos de forma segura según la API
-        val receta = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            arguments?.getParcelable("EXTRA_RECETA", Receta::class.java)
-        } else {
-            @Suppress("DEPRECATION")
-            arguments?.getParcelable<Receta>("EXTRA_RECETA")
-        }
+        val receta =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                arguments?.getParcelable(
+                    "EXTRA_RECETA",
+                    Receta::class.java
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                arguments?.getParcelable("EXTRA_RECETA")
+            }
 
-        // 2. Asignar los datos a los componentes de la interfaz
         receta?.let { data ->
+
             txtNombre.text = data.nombre
-            txtUsuario.text = "Por: ${data.usuario}"
             txtDescripcion.text = data.descripcion
 
-            // Convierte la lista de ingredientes a texto separado por saltos de línea
-            txtIngredientes.text = data.ingredientes.joinToString("\n") { "- $it" }
+            viewLifecycleOwner.lifecycleScope.launch {
 
-            // Convierte la lista del proceso enumerándolos automáticamente
-            txtProceso.text = data.proceso.mapIndexed { index, paso -> "${index + 1}. $paso" }.joinToString("\n")
+                // Obtener usuario
+                val usuario = UsuarioManager.obtenerUsuario(
+                    data.usuarioId
+                )
+
+                txtUsuario.text =
+                    if (usuario != null) {
+                        "${usuario.nombre} ${usuario.apellido}"
+                    } else {
+                        "Usuario desconocido"
+                    }
+
+                // Obtener ingredientes
+                val ingredientes =
+                    IngredientesManager.obtenerIngredientes(data.id)
+
+                txtIngredientes.text =
+                    ingredientes.joinToString("\n") {
+                        it.nombre
+                    }
+
+                // Obtener pasos
+                val pasos =
+                    PasosManager.obtenerPasos(data.id)
+
+                txtProceso.text =
+                    pasos.joinToString("\n") {
+                        "${it.numero}. ${it.descripcion}"
+                    }
+
+                imgReceta.load(data.imagenUrl)
+            }
         }
     }
 }

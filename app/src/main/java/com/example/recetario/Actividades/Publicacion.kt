@@ -1,6 +1,6 @@
 package com.example.recetario.Actividades
-
 import android.Manifest
+import android.app.AlertDialog
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
@@ -16,12 +16,22 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.lifecycleScope
 import com.example.recetario.Funciones.Navegacion
 import com.example.recetario.Funciones.Permisos
+import com.example.recetario.Funciones.Sesion
 import com.example.recetario.Funciones.Validaciones
+import com.example.recetario.Manager.IngredientesManager
+import com.example.recetario.Manager.RecetaManager
+import com.example.recetario.Modelos.Ingredientes
+import com.example.recetario.Modelos.Receta
 import com.example.recetario.R
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.textfield.TextInputEditText
+import kotlinx.coroutines.launch
+import java.io.ByteArrayOutputStream
+import com.example.recetario.Manager.PasosManager
+import com.example.recetario.Modelos.Pasos
 
 class Publicacion : AppCompatActivity() {
 
@@ -110,7 +120,6 @@ class Publicacion : AppCompatActivity() {
                 else -> false
             }
         }
-        // Asegura que el ícono correcto esté marcado en la barra inferior
         bottomNavigation.selectedItemId = R.id.nav_añadir
     }
 
@@ -121,48 +130,124 @@ class Publicacion : AppCompatActivity() {
     private fun validarYPublicar() {
         val nombre = etPostNombre.text.toString().trim()
         val descripcion = etPostDescripcion.text.toString().trim()
-        val ingredientes = etPostIngredientes.text.toString().trim()
-        val proceso = etPostProceso.text.toString().trim()
+        var ingredientes = etPostIngredientes.text.toString().trim()
+        var proceso = etPostProceso.text.toString().trim()
+        var listaIngredientes: List<String>? = null
+        var listaPasos: List<String>?=null
 
-        // 1. Validar que se haya seleccionado una imagen
+        // 1. Validar selección de imagen
         if (selectedMediaUri == null) {
             Toast.makeText(this, "Por favor, selecciona una imagen para tu receta", Toast.LENGTH_SHORT).show()
             return
         }
 
-        // 2. Validar campos usando tu clase auxiliar Validaciones
+        // 2. Validaciones de texto
         if (Validaciones.campoVacio(nombre)) {
             etPostNombre.error = "El nombre es obligatorio"
             etPostNombre.requestFocus()
             return
         }
-
         if (Validaciones.campoVacio(descripcion)) {
             etPostDescripcion.error = "La descripción es obligatoria"
             etPostDescripcion.requestFocus()
             return
         }
-
         if (Validaciones.campoVacio(ingredientes)) {
             etPostIngredientes.error = "Debes ingresar los ingredientes"
             etPostIngredientes.requestFocus()
             return
         }
-
+        else{
+          listaIngredientes=etPostIngredientes.text.toString().lines().map { it.trim() }.filter { it.isNotEmpty() }
+        }
         if (Validaciones.campoVacio(proceso)) {
             etPostProceso.error = "Debes ingresar los pasos de preparación"
             etPostProceso.requestFocus()
             return
         }
+        else{
+            listaPasos=etPostProceso.text.toString().lines().map { it.trim() }.filter { it.isNotEmpty() }
+        }
 
-        // Deshabilitar botón para evitar envíos dobles
+        // Evitamos doble publicación
         btnGuardarPost.isEnabled = false
+        Toast.makeText(this, "Procesando receta...", Toast.LENGTH_SHORT).show()
 
-        // TODO: Aquí disparas tu corrutina para Firebase Storage + Supabase
-        Toast.makeText(this, "Publicando receta...", Toast.LENGTH_SHORT).show()
+        lifecycleScope.launch {
+            // A. Procesar el bitmap local y convertirlo a ByteArray
+            val bitmap = ajustarImagen(selectedMediaUri!!, 800)
+            if (bitmap == null) {
+                mostrarError("No se pudo procesar la imagen seleccionada.")
+                return@launch
+            }
 
-        // Simulación de éxito por el momento:
-        // finish()
+            val stream = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 85, stream)
+            val bytesImagen = stream.toByteArray()
+            val nombreArchivo = "receta_${System.currentTimeMillis()}.jpg"
+
+            // B. Subir al Storage de Supabase
+            val urlPublicaImagen = RecetaManager.subirImagen(nombreArchivo, bytesImagen)
+
+            if (urlPublicaImagen != null) {
+                val receta = Receta(
+                    usuarioId = Sesion.usuario?.id ?: "",
+                    nombre = nombre,
+                    descripcion = descripcion,
+                    imagenUrl = urlPublicaImagen
+                )
+
+                // C. Guardar el registro relacional principal
+                val recetaCreada = RecetaManager.crearReceta(receta)
+
+                if (recetaCreada != null) {
+                    // Crear Ingredientes de la Receta
+                    for (ingrediente in listaIngredientes) {
+
+                        val nuevoIngrediente = Ingredientes(
+                            recetaId = recetaCreada.id,
+                            nombre = ingrediente
+                        )
+                        val exito = IngredientesManager.crearIngrediente(nuevoIngrediente)
+                        if (!exito) {
+                            Toast.makeText(this@Publicacion, "Error al guardar los ingredientes", Toast.LENGTH_SHORT).show()
+                            return@launch
+                        }
+                    }
+                    //Crear Pasos de la Receta
+                    var numero=1
+                    for (proceso in listaPasos ){
+                        val nuevoPaso= Pasos(
+                            recetaId = recetaCreada.id,
+                            descripcion = proceso,
+                            numero = numero
+                        )
+                        val exito = PasosManager.crearPaso(nuevoPaso)
+                        if (!exito) {
+                            Toast.makeText(this@Publicacion, "Error al guardar los pasos de la receta", Toast.LENGTH_SHORT).show()
+                            return@launch
+                        }
+                        numero++
+                    }
+
+                    Toast.makeText(this@Publicacion, "La receta se ha publicado exitosamente", Toast.LENGTH_SHORT).show()
+                    finish() // Regresa al fragmento anterior
+                } else {
+                    mostrarError("No se pudieron registrar los datos de la receta en el servidor.")
+                }
+            } else {
+                mostrarError("No se pudo subir la imagen al servidor. Intenta de nuevo.")
+            }
+        }
+    }
+
+    private fun mostrarError(mensaje: String) {
+        btnGuardarPost.isEnabled = true
+        AlertDialog.Builder(this@Publicacion)
+            .setTitle("Error")
+            .setMessage(mensaje)
+            .setPositiveButton("Aceptar", null)
+            .show()
     }
 
     private fun ajustarImagen(uri: Uri, tamañoMaximo: Int): Bitmap? {

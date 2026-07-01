@@ -30,7 +30,6 @@ class RecetasViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
         txtDescripcion.text = receta.descripcion
 
-        txtRecetaUsuario.text = receta.usuario
 
         itemView.setOnClickListener {
             onClickListener(receta)

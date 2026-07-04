@@ -7,6 +7,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.recetario.Funciones.Validaciones
 import com.example.recetario.R
+import com.google.firebase.auth.EmailAuthProvider
+import com.google.firebase.auth.FirebaseAuth
 
 class CambiarContraseña : AppCompatActivity() {
 
@@ -111,14 +113,58 @@ class CambiarContraseña : AppCompatActivity() {
             return
         }
 
-        // Aquí irá las validaciones de firebase cuando toque
+        btnGuardar.isEnabled = false
 
-        Toast.makeText(
-            this,
-            "Contraseña actualizada correctamente",
-            Toast.LENGTH_SHORT
-        ).show()
+        val usuario = FirebaseAuth.getInstance().currentUser
 
-        finish()
+        if (usuario == null || usuario.email == null) {
+
+            Toast.makeText(
+                this,
+                "No se encontró el usuario autenticado",
+                Toast.LENGTH_SHORT
+            ).show()
+
+            btnGuardar.isEnabled = true
+            return
+        }
+
+        val credential = EmailAuthProvider.getCredential(
+            usuario.email!!,
+            passwordActual
+        )
+
+        usuario.reauthenticate(credential)
+            .addOnSuccessListener {
+
+                usuario.updatePassword(nuevaPassword)
+                    .addOnSuccessListener {
+
+                        Toast.makeText(
+                            this,
+                            "Contraseña actualizada correctamente",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        finish()
+                    }
+                    .addOnFailureListener { e ->
+
+                        btnGuardar.isEnabled = true
+
+                        Toast.makeText(
+                            this,
+                            e.message ?: "No se pudo cambiar la contraseña",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+            }
+            .addOnFailureListener {
+
+                btnGuardar.isEnabled = true
+
+                txtPasswordActual.error = "La contraseña actual es incorrecta"
+                txtPasswordActual.requestFocus()
+            }
     }
 }

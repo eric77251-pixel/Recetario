@@ -1,29 +1,45 @@
 package com.example.recetario.Manager
 
-import com.example.recetario.Funciones.Supabase
 import com.example.recetario.Modelos.Pasos
-import io.github.jan.supabase.postgrest.from
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 
 object PasosManager {
 
+    private val db = FirebaseFirestore.getInstance()
+    private val coleccion = db.collection("pasos")
+
     suspend fun crearPaso(paso: Pasos): Boolean {
+
         return try {
-            Supabase.client.from("pasos").insert(paso)
+
+            val documento = coleccion.document()
+
+            paso.id = documento.id
+
+            documento
+                .set(paso)
+                .await()
+
             true
+
         } catch (e: Exception) {
+
             e.printStackTrace()
-            false
+            throw Exception(e.message)
         }
     }
 
     suspend fun obtenerPasos(recetaId: String): List<Pasos> {
+
         return try {
-            Supabase.client.from("pasos").select {
-                    filter {
-                        eq("receta_id", recetaId)
-                    }
-                }
-                .decodeList<Pasos>()
+
+            coleccion
+                .whereEqualTo("recetaId", recetaId)
+                .get()
+                .await()
+                .toObjects(Pasos::class.java)
+                .sortedBy { it.numero } // 👈 ordenamos en Kotlin en vez de Firestore
 
         } catch (e: Exception) {
 
@@ -33,14 +49,22 @@ object PasosManager {
     }
 
     suspend fun eliminarPasos(recetaId: String): Boolean {
+
         return try {
-            Supabase.client.from("pasos").delete {
-                    filter {
-                        eq("receta_id", recetaId)
-                    }
-                }
+
+            val documentos = coleccion
+                .whereEqualTo("recetaId", recetaId)
+                .get()
+                .await()
+
+            for (documento in documentos.documents) {
+                documento.reference.delete().await()
+            }
+
             true
+
         } catch (e: Exception) {
+
             e.printStackTrace()
             false
         }

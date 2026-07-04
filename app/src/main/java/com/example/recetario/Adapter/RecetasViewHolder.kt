@@ -4,6 +4,7 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
 import com.example.recetario.Modelos.Receta
 import com.example.recetario.R
 
@@ -30,6 +31,20 @@ class RecetasViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
         txtDescripcion.text = receta.descripcion
 
+        txtRecetaUsuario.text = receta.nombreUsuario
+
+        if (receta.imagenUrl.isNotBlank()) {
+
+            imgPost.load(receta.imagenUrl) {
+                crossfade(true)
+                placeholder(R.drawable.ic_launcher_foreground)
+                error(R.drawable.ic_launcher_foreground)
+            }
+
+        } else {
+
+            imgPost.setImageResource(R.drawable.ic_launcher_foreground)
+        }
 
         itemView.setOnClickListener {
             onClickListener(receta)

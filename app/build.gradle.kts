@@ -44,32 +44,36 @@ android {
 
 }
 dependencies {
+
     implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.core.ktx)
     implementation(libs.material)
 
-
-
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
 
+    // Firebase
     implementation(platform("com.google.firebase:firebase-bom:34.15.0"))
     implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
 
+    // Supabase (solo Storage)
     implementation(platform("io.github.jan-tennert.supabase:bom:3.2.4"))
-    implementation("io.github.jan-tennert.supabase:postgrest-kt")
+    implementation("io.github.jan-tennert.supabase:storage-kt")
 
+    // Ktor
     implementation("io.ktor:ktor-client-android:3.1.3")
-
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
-
     implementation("io.ktor:ktor-client-content-negotiation")
 
-    implementation("io.github.jan-tennert.supabase:storage-kt:VERSION")
+    // Kotlin Serialization
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
 
+    // Coil
     implementation("io.coil-kt:coil:2.7.0")
 
+    // Coroutines Firebase
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
 }

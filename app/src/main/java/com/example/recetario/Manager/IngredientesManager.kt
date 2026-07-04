@@ -1,29 +1,44 @@
 package com.example.recetario.Manager
 
-import com.example.recetario.Funciones.Supabase
 import com.example.recetario.Modelos.Ingredientes
-import io.github.jan.supabase.postgrest.from
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 
 object IngredientesManager {
 
+    private val db = FirebaseFirestore.getInstance()
+    private val coleccion = db.collection("ingredientes")
+
     suspend fun crearIngrediente(ingrediente: Ingredientes): Boolean {
+
         return try {
-            Supabase.client.from("ingredientes").insert(ingrediente)
+
+            val documento = coleccion.document()
+
+            ingrediente.id = documento.id
+
+            documento
+                .set(ingrediente)
+                .await()
+
             true
+
         } catch (e: Exception) {
+
             e.printStackTrace()
-            false
+            throw Exception(e.message)
         }
     }
 
     suspend fun obtenerIngredientes(recetaId: String): List<Ingredientes> {
+
         return try {
-            Supabase.client.from("ingredientes").select {
-                    filter {
-                        eq("receta_id", recetaId)
-                    }
-                }
-                .decodeList<Ingredientes>()
+
+            coleccion
+                .whereEqualTo("recetaId", recetaId)
+                .get()
+                .await()
+                .toObjects(Ingredientes::class.java)
 
         } catch (e: Exception) {
 
@@ -33,12 +48,17 @@ object IngredientesManager {
     }
 
     suspend fun eliminarIngredientes(recetaId: String): Boolean {
+
         return try {
-            Supabase.client.from("ingredientes").delete {
-                    filter {
-                        eq("receta_id", recetaId)
-                    }
-                }
+
+            val documentos = coleccion
+                .whereEqualTo("recetaId", recetaId)
+                .get()
+                .await()
+
+            for (documento in documentos.documents) {
+                documento.reference.delete().await()
+            }
 
             true
 

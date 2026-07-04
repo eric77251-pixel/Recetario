@@ -114,36 +114,16 @@
                             android:layout_height="wrap_content"
                             android:inputType="textPersonName" />
                     </com.google.android.material.textfield.TextInputLayout>
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/layoutEditarContraseña"
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnIrCambiarContrasena"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Contraseña"
-                        app:startIconDrawable="@android:drawable/ic_menu_myplaces"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-                    <com.google.android.material.textfield.TextInputEditText
-
-                        android:id="@+id/etEditarContraseña"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="textPassword" />
-                </com.google.android.material.textfield.TextInputLayout>
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/layoutEditarConfirmarContraseña"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="Confirmar Contraseña"
-                        app:startIconDrawable="@android:drawable/ic_menu_myplaces"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-                        <com.google.android.material.textfield.TextInputEditText
-
-                            android:id="@+id/etEditarConfirmarContraseña"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="textPassword" />
-                    </com.google.android.material.textfield.TextInputLayout>
-
+                        android:text="Seguridad"
+                        app:icon="@android:drawable/ic_lock_lock"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
                 </LinearLayout>
+
 
             </androidx.cardview.widget.CardView>
 

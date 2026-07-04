@@ -27,7 +27,7 @@ class IniciarSesion : Fragment() {
     private lateinit var txtContraseña: EditText
     private lateinit var btnAcceder: Button
     private lateinit var btnCrearUsuario: Button
-    private lateinit var textCambiarContraseña: TextView
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -45,16 +45,10 @@ class IniciarSesion : Fragment() {
         txtContraseña = view.findViewById(R.id.txtContraseña)
         btnAcceder = view.findViewById(R.id.btnAcceder)
         btnCrearUsuario = view.findViewById(R.id.btnCrearUsuario)
-        textCambiarContraseña = view.findViewById(R.id.textCambiarcontraseña)
+
 
         btnAcceder.setOnClickListener {
             iniciarSesion()
-        }
-
-        // Corregido: Uso correcto del contexto en un Fragment
-        textCambiarContraseña.setOnClickListener {
-            val intent = Intent(requireContext(), CambiarContraseña::class.java)
-            startActivity(intent)
         }
 
         btnCrearUsuario.setOnClickListener {
@@ -134,7 +128,7 @@ class IniciarSesion : Fragment() {
             // Buscar los datos del usuario en Supabase
             viewLifecycleOwner.lifecycleScope.launch {
 
-                val usuario = UsuarioManager.obtenerUsuario(firebaseUser.toString())
+                val usuario = UsuarioManager.obtenerUsuario(firebaseUser.uid.toString())
 
                 btnAcceder.isEnabled = true
 

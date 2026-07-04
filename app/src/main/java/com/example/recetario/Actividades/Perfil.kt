@@ -7,11 +7,20 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.recetario.Adapter.PerfilAdapter
-import com.example.recetario.Fragmentos.DetallesReceta
 import com.example.recetario.Funciones.Navegacion
+import androidx.activity.addCallback
 import com.example.recetario.Modelos.Receta
 import com.example.recetario.R
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import androidx.lifecycle.lifecycleScope
+import com.example.recetario.Manager.GuardadosManager
+import com.example.recetario.Manager.RecetaManager
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.launch
+import android.widget.ImageView
+import android.widget.TextView
+import coil.load
+import com.example.recetario.Manager.UsuarioManager
 
 class Perfil : AppCompatActivity() {
 
@@ -26,11 +35,25 @@ class Perfil : AppCompatActivity() {
     private lateinit var bottomNavigation: BottomNavigationView
 
     private lateinit var bottonEditarPerfil: Button
+    private lateinit var imgFotoPerfil: ImageView
+
+    private lateinit var txtNombreUsuario: TextView
+    private lateinit var txtCorreoUsuario: TextView
+
+    private lateinit var txtCantidadRecetas: TextView
+    private lateinit var txtFavoritas: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.perfil)
+        imgFotoPerfil = findViewById(R.id.imgFotoPerfil)
+
+        txtNombreUsuario = findViewById(R.id.txtNombreUsuario)
+        txtCorreoUsuario = findViewById(R.id.txtCorreoUsuario)
+
+        txtCantidadRecetas = findViewById(R.id.txtCantidadRecetas)
+        txtFavoritas = findViewById(R.id.txtFavoritas)
 
         bottomNavigation = findViewById(R.id.bottomNavigation)
 
@@ -40,7 +63,9 @@ class Perfil : AppCompatActivity() {
         recyclerPublicadas = findViewById(R.id.recyclerPublicadas)
 
         iniciarRecyclerViews()
-
+        onBackPressedDispatcher.addCallback(this) {
+            Navegacion.volverARecetas(this@Perfil)
+        }
         bottonEditarPerfil.setOnClickListener {
             val activity= Intent(this, EditarPerfil::class.java)
             startActivity(activity)
@@ -66,14 +91,44 @@ class Perfil : AppCompatActivity() {
                 else -> false
             }
         }
+        cargarUsuario()
     }
 
 
+    private fun cargarUsuario() {
+
+        lifecycleScope.launch {
+
+            val firebaseUser =
+                FirebaseAuth.getInstance().currentUser
+                    ?: return@launch
+
+            val usuario =
+                UsuarioManager.obtenerUsuario(firebaseUser.uid)
+                    ?: return@launch
+
+            txtNombreUsuario.text =
+                "${usuario.nombre} ${usuario.apellido}"
+
+            txtCorreoUsuario.text =
+                usuario.correo
+
+            if (usuario.fotoPerfil.isNotBlank()) {
+
+                imgFotoPerfil.load(usuario.fotoPerfil)
+
+            } else {
+
+                imgFotoPerfil.setImageResource(
+                    android.R.drawable.sym_def_app_icon
+                )
+            }
+
+        }
+    }
+
 
     private fun iniciarRecyclerViews() {
-
-        listaFavoritas = obtenerFavoritas()
-        listaPublicadas = obtenerPublicadas()
 
         adapterFavoritas =
             PerfilAdapter(listaFavoritas) { receta ->
@@ -101,76 +156,61 @@ class Perfil : AppCompatActivity() {
 
         recyclerFavoritas.adapter = adapterFavoritas
         recyclerPublicadas.adapter = adapterPublicadas
+
+        obtenerFavoritas()
+        obtenerPublicadas()
+    }
+    private fun obtenerFavoritas() {
+
+        lifecycleScope.launch {
+
+            val usuario = FirebaseAuth.getInstance().currentUser ?: return@launch
+
+            val favoritos =
+                GuardadosManager.obtenerFavoritos(usuario.uid)
+
+            listaFavoritas.clear()
+
+            for (favorito in favoritos) {
+
+                val receta =
+                    RecetaManager.obtenerReceta(favorito.recetaId)
+
+                if (receta != null) {
+                    listaFavoritas.add(receta)
+                }
+            }
+            txtFavoritas.text =
+                listaFavoritas.size.toString()
+
+            adapterFavoritas.notifyDataSetChanged()
+        }
+    }
+    private fun obtenerPublicadas() {
+
+        lifecycleScope.launch {
+
+            val usuario = FirebaseAuth.getInstance().currentUser ?: return@launch
+
+            val recetas =
+                RecetaManager.obtenerRecetasUsuario(usuario.uid)
+
+            listaPublicadas.clear()
+            listaPublicadas.addAll(recetas)
+            txtCantidadRecetas.text =
+                listaPublicadas.size.toString()
+
+            adapterPublicadas.notifyDataSetChanged()
+        }
     }
 
-    private fun obtenerFavoritas(): MutableList<Receta> {
-
-        return mutableListOf(
-
-            Receta(
-                id = "1",
-                usuario = "Dragon",
-                nombre = "Arroz con Pollo",
-                descripcion = "Receta favorita",
-                imagenUrl = ""
-            ),
-
-            Receta(
-                id = "2",
-                usuario = "Dragon",
-                nombre = "Lasagna",
-                descripcion = "Receta favorita",
-                imagenUrl = ""
-            ),
-
-            Receta(
-                id = "3",
-                usuario = "Dragon",
-                nombre = "Panqueques",
-                descripcion = "Receta favorita",
-                imagenUrl = ""
-            )
-        )
-    }
-
-    private fun obtenerPublicadas(): MutableList<Receta> {
-
-        return mutableListOf(
-
-            Receta(
-                id = "10",
-                usuario = "Dragon",
-                nombre = "Sancocho",
-                descripcion = "Publicada por el usuario",
-                imagenUrl = ""
-            ),
-
-            Receta(
-                id = "11",
-                usuario = "Dragon",
-                nombre = "Arroz con Guandú",
-                descripcion = "Publicada por el usuario",
-                imagenUrl = ""
-            ),
-
-            Receta(
-                id = "12",
-                usuario = "Dragon",
-                nombre = "Tamales",
-                descripcion = "Publicada por el usuario",
-                imagenUrl = ""
-            )
-        )
-    }
 
     private fun abrirDetalle(receta: Receta) {
 
-        val intent = Intent(
-            this,
-            DetallesReceta::class.java
-        )
+        val intent = Intent(this, MainActivity::class.java)
 
-        intent.putExtra("receta", receta)
+        intent.putExtra("EXTRA_RECETA", receta)
+        intent.putExtra("ABRIR_DETALLE", true)
 
         startActivity(intent)
     }

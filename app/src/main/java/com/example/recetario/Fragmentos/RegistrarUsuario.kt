@@ -10,14 +10,14 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.example.recetario.Funciones.Authentication
 import com.example.recetario.Funciones.Validaciones
 import com.example.recetario.Manager.UsuarioManager
-import com.example.recetario.R
-import com.google.firebase.auth.FirebaseAuth
 import com.example.recetario.Modelos.Usuario
-import androidx.lifecycle.lifecycleScope
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
+import com.example.recetario.R
 
 class RegistrarUsuario : Fragment() {
 
@@ -34,11 +34,7 @@ class RegistrarUsuario : Fragment() {
         savedInstanceState: Bundle?
     ): View {
 
-        val view = inflater.inflate(
-            R.layout.creacion_usario,
-            container,
-            false
-        )
+        val view = inflater.inflate(R.layout.creacion_usario, container, false)
 
         txtNombre = view.findViewById(R.id.txtNombre)
         txtApellido = view.findViewById(R.id.txtApellido)
@@ -49,9 +45,7 @@ class RegistrarUsuario : Fragment() {
 
         btnCrearUsuario.setOnClickListener {
 
-            if (!validarFormulario()) {
-                return@setOnClickListener
-            }
+            if (!validarFormulario()) return@setOnClickListener
 
             btnCrearUsuario.isEnabled = false
 
@@ -60,70 +54,67 @@ class RegistrarUsuario : Fragment() {
                 txtPassword.text.toString()
             ) { exito, mensaje ->
 
-                btnCrearUsuario.isEnabled = true
+                if (!exito) {
 
-                if (exito) {
-                    // Se obtiene el usario que se acaba de crear
-                    val firebaseUser = FirebaseAuth.getInstance().currentUser
-
-                    if (firebaseUser == null) {
-
-                        Toast.makeText(
-                            requireContext(),
-                            "No se ha podido añadir los datos del usuario a la base de datos",
-                            Toast.LENGTH_SHORT
-                        ).show()
-
-                        return@crearUsuario
-                    }
-                    val usuario = Usuario(
-
-                        id = firebaseUser!!.uid,
-
-                        nombre = txtNombre.text.toString().trim(),
-
-                        apellido = txtApellido.text.toString().trim(),
-
-                        correo = firebaseUser.email ?: "",
-
-                        fotoPerfil = ""
-                    )
-                    viewLifecycleOwner.lifecycleScope.launch {
-                        ///Se crea el usario en la supabase
-                        val guardado = UsuarioManager.crearUsuario(usuario)
-
-                        if (guardado) {
-                            // Firebase inicia sesión automáticamente al crear un usuario
-                            Authentication.cerrarSesion()
-
-                            Toast.makeText(
-                                requireContext(),
-                                "Usuario creado correctamente",
-                                Toast.LENGTH_SHORT
-                            ).show()
-
-                            parentFragmentManager.popBackStack()
-
-                        }
-                        else{
-                            AlertDialog.Builder(requireContext())
-                                .setTitle("Error")
-                                .setMessage(
-                                    mensaje ?: "El usuario se ha creado pero ha ocurrido un error al guardar sus datos"
-                                )
-                                .setPositiveButton("Aceptar", null)
-                                .show()
-                        }}
-                    parentFragmentManager.popBackStack()
-                } else {
+                    btnCrearUsuario.isEnabled = true
 
                     AlertDialog.Builder(requireContext())
                         .setTitle("Error")
-                        .setMessage(
-                            mensaje ?: "No fue posible crear el usuario."
-                        )
+                        .setMessage(mensaje ?: "No fue posible crear el usuario.")
                         .setPositiveButton("Aceptar", null)
                         .show()
+
+                    return@crearUsuario
+                }
+
+                val firebaseUser = FirebaseAuth.getInstance().currentUser
+
+                if (firebaseUser == null) {
+
+                    btnCrearUsuario.isEnabled = true
+
+                    Toast.makeText(
+                        requireContext(),
+                        "Error: usuario Firebase nulo",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    return@crearUsuario
+                }
+
+                val usuario = Usuario(
+                    id = firebaseUser.uid,
+                    nombre = txtNombre.text.toString().trim(),
+                    apellido = txtApellido.text.toString().trim(),
+                    correo = firebaseUser.email ?: "",
+                    fotoPerfil = ""
+                )
+
+                viewLifecycleOwner.lifecycleScope.launch {
+
+                    val guardado = UsuarioManager.crearUsuario(usuario)
+
+                    if (guardado) {
+
+                        Toast.makeText(
+                            requireContext(),
+                            "Usuario creado correctamente",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        // volver al login o pantalla anterior
+                        parentFragmentManager.popBackStack()
+
+                    } else {
+
+                        AlertDialog.Builder(requireContext())
+                            .setTitle("Error")
+                            .setMessage("No se pudo guardar el usuario en Firestore")
+                            .setPositiveButton("Aceptar", null)
+                            .show()
+                    }
+
+                    btnCrearUsuario.isEnabled = true
                 }
             }
         }
@@ -131,17 +122,12 @@ class RegistrarUsuario : Fragment() {
         return view
     }
 
-    override fun onViewCreated(
-        view: View,
-        savedInstanceState: Bundle?
-    ) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Al presionar Atrás vuelve al fragmento anterior
         requireActivity().onBackPressedDispatcher.addCallback(
             viewLifecycleOwner,
             object : OnBackPressedCallback(true) {
-
                 override fun handleOnBackPressed() {
                     parentFragmentManager.popBackStack()
                 }
@@ -159,44 +145,36 @@ class RegistrarUsuario : Fragment() {
 
         if (Validaciones.campoVacio(nombre)) {
             txtNombre.error = "Ingrese un nombre"
-            txtNombre.requestFocus()
             return false
         }
 
         if (Validaciones.campoVacio(apellido)) {
             txtApellido.error = "Ingrese un apellido"
-            txtApellido.requestFocus()
             return false
         }
 
         if (Validaciones.campoVacio(correo)) {
             txtCorreo.error = "Ingrese un correo"
-            txtCorreo.requestFocus()
             return false
         }
 
         if (!Validaciones.correoValido(correo)) {
             txtCorreo.error = "Correo inválido"
-            txtCorreo.requestFocus()
             return false
         }
 
         if (Validaciones.campoVacio(password)) {
             txtPassword.error = "Ingrese una contraseña"
-            txtPassword.requestFocus()
             return false
         }
 
         if (!Validaciones.contraseñaValida(password)) {
-            txtPassword.error =
-                "Debe contener mínimo 8 caracteres, una letra, un número y un símbolo."
-            txtPassword.requestFocus()
+            txtPassword.error = "Contraseña débil"
             return false
         }
 
         if (!Validaciones.contraseñasCoinciden(password, confirmar)) {
-            txtConfirmarPassword.error = "Las contraseñas no coinciden"
-            txtConfirmarPassword.requestFocus()
+            txtConfirmarPassword.error = "No coinciden"
             return false
         }
 

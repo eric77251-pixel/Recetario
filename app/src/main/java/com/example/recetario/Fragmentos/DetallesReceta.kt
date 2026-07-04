@@ -1,5 +1,6 @@
 package com.example.recetario.Fragmentos
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -12,20 +13,29 @@ import com.example.recetario.Funciones.ZoomListener
 import com.example.recetario.Manager.IngredientesManager
 import com.example.recetario.Manager.PasosManager
 import com.example.recetario.Manager.UsuarioManager
+import com.example.recetario.Manager.RecetaManager
 import com.example.recetario.Modelos.Receta
 import com.example.recetario.R
 import kotlinx.coroutines.launch
 import android.os.Build
 import coil.load
-
+import com.example.recetario.Manager.GuardadosManager
+import com.example.recetario.Modelos.Guardado
+import com.google.android.material.button.MaterialButton
+import com.google.firebase.auth.FirebaseAuth
+import android.widget.Toast
 class DetallesReceta : Fragment() {
 
+    private lateinit var btnEliminarReceta: MaterialButton
     private lateinit var imgReceta: ImageView
     private lateinit var txtNombre: TextView
     private lateinit var txtUsuario: TextView
     private lateinit var txtDescripcion: TextView
     private lateinit var txtIngredientes: TextView
     private lateinit var txtProceso: TextView
+    private lateinit var btnFavorito: MaterialButton
+
+    private var esFavorito = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -46,6 +56,8 @@ class DetallesReceta : Fragment() {
         txtDescripcion = view.findViewById(R.id.txtDescripcion)
         txtIngredientes = view.findViewById(R.id.txtIngredientes)
         txtProceso = view.findViewById(R.id.txtProceso)
+        btnFavorito = view.findViewById(R.id.btnFavorito)
+        btnEliminarReceta = view.findViewById(R.id.btnEliminarReceta)
 
         return view
     }
@@ -69,7 +81,7 @@ class DetallesReceta : Fragment() {
             }
 
         receta?.let { data ->
-
+            val usuarioActual = FirebaseAuth.getInstance().currentUser
             txtNombre.text = data.nombre
             txtDescripcion.text = data.descripcion
 
@@ -97,16 +109,164 @@ class DetallesReceta : Fragment() {
                     }
 
                 // Obtener pasos
-                val pasos =
-                    PasosManager.obtenerPasos(data.id)
+                viewLifecycleOwner.lifecycleScope.launch {
 
-                txtProceso.text =
-                    pasos.joinToString("\n") {
-                        "${it.numero}. ${it.descripcion}"
+                    try {
+
+                        val pasos = PasosManager.obtenerPasos(data.id)
+
+                        txtProceso.text = if (pasos.isNotEmpty()) {
+                            pasos.joinToString("\n") { paso ->
+                                "${paso.numero}. ${paso.descripcion}"
+                            }
+                        } else {
+                            "No hay pasos disponibles"
+                        }
+
+                    } catch (e: Exception) {
+
+                        e.printStackTrace()
+
+                        txtProceso.text = "Error cargando pasos"
                     }
+                }
 
                 imgReceta.load(data.imagenUrl)
+
+                usuarioActual?.let {
+
+                    esFavorito = GuardadosManager.esFavorito(
+                        it.uid,
+                        data.id
+                    )
+
+                    actualizarBotonFavorito()
+                }
+
+            }
+            btnFavorito.setOnClickListener {
+
+                val usuarioActual = FirebaseAuth.getInstance().currentUser
+                    ?: return@setOnClickListener
+
+                viewLifecycleOwner.lifecycleScope.launch {
+
+                    if (esFavorito) {
+
+                        val eliminado = GuardadosManager.eliminarFavorito(
+                            usuarioActual.uid,
+                            data.id
+                        )
+
+                        if (eliminado) {
+
+                            esFavorito = false
+                            actualizarBotonFavorito()
+                        }
+
+                    } else {
+
+                        val guardado = Guardado(
+
+                            id = "${usuarioActual.uid}_${data.id}",
+
+                            usuarioId = usuarioActual.uid,
+
+                            recetaId = data.id
+                        )
+
+                        val agregado = GuardadosManager.agregarFavorito(
+                            guardado
+                        )
+
+                        if (agregado) {
+
+                            esFavorito = true
+                            actualizarBotonFavorito()
+                        }
+                    }
+                }
+            }
+
+            if (usuarioActual != null && usuarioActual.uid == data.usuarioId) {
+
+                btnEliminarReceta.visibility = View.VISIBLE
+                btnEliminarReceta.isEnabled = true
+
+            } else {
+
+                btnEliminarReceta.visibility = View.GONE
+                btnEliminarReceta.isEnabled = false
+            }
+            btnEliminarReceta.setOnClickListener {
+
+                AlertDialog.Builder(requireContext())
+                    .setTitle("Eliminar receta")
+                    .setMessage("¿Seguro que deseas eliminar esta receta?")
+                    .setPositiveButton("Sí") { _, _ ->
+                        eliminarReceta(data)
+                    }
+                    .setNegativeButton("Cancelar", null)
+                    .show()
+            }
+
+        }
+
+    }
+    private fun eliminarReceta(receta: Receta) {
+
+        viewLifecycleOwner.lifecycleScope.launch {
+
+            try {
+                IngredientesManager.eliminarIngredientes(receta.id)
+                PasosManager.eliminarPasos(receta.id)
+                val ok = RecetaManager.eliminarReceta(receta.id)
+
+                if (ok) {
+
+                    Toast.makeText(
+                        requireContext(),
+                        "Receta eliminada",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    parentFragmentManager.popBackStack()
+
+                } else {
+
+                    Toast.makeText(
+                        requireContext(),
+                        "No se pudo eliminar",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+            } catch (e: Exception) {
+
+                Toast.makeText(
+                    requireContext(),
+                    "Error al eliminar receta",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                e.printStackTrace()
             }
         }
     }
+    private fun actualizarBotonFavorito() {
+
+        if (esFavorito) {
+
+            btnFavorito.setIconResource(R.drawable.outline_bookmark_24)
+
+            btnFavorito.text = "Guardada"
+
+        } else {
+
+            btnFavorito.setIconResource(R.drawable.outline_bookmark_add_24)
+
+            btnFavorito.text = "Guardar receta"
+        }
+    }
+
 }

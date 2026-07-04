@@ -12,7 +12,8 @@ data class Receta(
 
  @SerialName("usuario_id")
  var usuarioId: String = "",
-
+ @SerialName("nombre_usuario")
+ var nombreUsuario: String = "",
  var nombre: String = "",
 
  var descripcion: String = "",
@@ -31,12 +32,14 @@ data class Receta(
   parcel.readString() ?: "",
   parcel.readString() ?: "",
   parcel.readString() ?: "",
+  parcel.readString() ?: "",
   parcel.readString() ?: ""
  )
 
  override fun writeToParcel(parcel: Parcel, flags: Int) {
   parcel.writeString(id)
   parcel.writeString(usuarioId)
+  parcel.writeString(nombreUsuario)
   parcel.writeString(nombre)
   parcel.writeString(descripcion)
   parcel.writeString(imagenUrl)

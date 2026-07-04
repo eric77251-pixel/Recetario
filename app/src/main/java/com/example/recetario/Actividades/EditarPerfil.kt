@@ -15,6 +15,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import coil.load
+import com.example.recetario.Funciones.Permisos
 import com.example.recetario.Funciones.Sesion
 import com.example.recetario.Funciones.Validaciones
 import com.example.recetario.Manager.UsuarioManager
@@ -31,27 +32,15 @@ class EditarPerfil : AppCompatActivity() {
     private lateinit var etEditarApellido: TextInputEditText
     private lateinit var btnGuardarCambios: Button
     private lateinit var btnIrCambiarContrasena: Button
-
+    private val manejadorPermisos = Permisos(this)
     private var fotoUriSeleccionada: Uri? = null
+    private val seleccionarFotoLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) {
+            fotoUriSeleccionada = uri
+            imgFotoEditarPerfil.load(uri)
 
-    private val seleccionarFotoLauncher =
-        registerForActivityResult(
-            ActivityResultContracts.StartActivityForResult()
-        ) { result ->
-
-            if (result.resultCode == Activity.RESULT_OK) {
-
-                val data = result.data
-
-                data?.data?.let { uri ->
-
-                    fotoUriSeleccionada = uri
-
-                    imgFotoEditarPerfil.setImageURI(uri)
-
-                }
-            }
         }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,11 +51,17 @@ class EditarPerfil : AppCompatActivity() {
         cargarUsuario()
 
         txtCambiarFoto.setOnClickListener {
-            abrirGaleria()
+
+            if (manejadorPermisos.permisosMultimedia(100)) {
+                abrirGaleria()
+            }
         }
 
         imgFotoEditarPerfil.setOnClickListener {
-            abrirGaleria()
+
+            if (manejadorPermisos.permisosMultimedia(100)) {
+                abrirGaleria()
+            }
         }
 
         btnIrCambiarContrasena.setOnClickListener {
@@ -140,13 +135,7 @@ class EditarPerfil : AppCompatActivity() {
     }
 
     private fun abrirGaleria() {
-
-        val intent = Intent(Intent.ACTION_PICK).apply {
-            type = "image/*"
-        }
-
-        seleccionarFotoLauncher.launch(intent)
-
+        seleccionarFotoLauncher.launch("image/*")
     }
 
     private fun validarYGuardar() {
@@ -266,8 +255,6 @@ class EditarPerfil : AppCompatActivity() {
 
                         }
 
-                    startActivity(intent)
-                    finish()
 
                 } else {
 
@@ -297,6 +284,15 @@ class EditarPerfil : AppCompatActivity() {
 
         }
 
+    }
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 100) {
+            val concedidos = grantResults.isNotEmpty() && grantResults.all { it == android.content.pm.PackageManager.PERMISSION_GRANTED }
+            if (concedidos) {
+                abrirGaleria()
+            }
+        }
     }
 
 }

@@ -56,9 +56,7 @@ class Publicacion : AppCompatActivity() {
 
     private val manejadorPermisos = Permisos(this)
 
-    private val pickMedia = registerForActivityResult(
-        ActivityResultContracts.GetContent()
-    ) { uri ->
+    private val pickMedia = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
             selectedMediaUri = uri
             tipoContenido = "imagen"

@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import android.widget.FrameLayout
 import androidx.lifecycle.lifecycleScope
 import com.example.recetario.Funciones.ZoomListener
 import com.example.recetario.Manager.IngredientesManager
@@ -24,6 +25,8 @@ import com.example.recetario.Modelos.Guardado
 import com.google.android.material.button.MaterialButton
 import com.google.firebase.auth.FirebaseAuth
 import android.widget.Toast
+import androidx.activity.addCallback
+import com.example.recetario.Actividades.MainActivity
 class DetallesReceta : Fragment() {
 
     private lateinit var btnEliminarReceta: MaterialButton
@@ -34,8 +37,9 @@ class DetallesReceta : Fragment() {
     private lateinit var txtIngredientes: TextView
     private lateinit var txtProceso: TextView
     private lateinit var btnFavorito: MaterialButton
-
     private var esFavorito = false
+    private lateinit var layoutZoom: FrameLayout
+    private lateinit var imgZoom: ImageView
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -58,6 +62,8 @@ class DetallesReceta : Fragment() {
         txtProceso = view.findViewById(R.id.txtProceso)
         btnFavorito = view.findViewById(R.id.btnFavorito)
         btnEliminarReceta = view.findViewById(R.id.btnEliminarReceta)
+        layoutZoom = view.findViewById(R.id.layoutZoom)
+        imgZoom = view.findViewById(R.id.imgZoom)
 
         return view
     }
@@ -65,8 +71,6 @@ class DetallesReceta : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Asignar el listener externo para habilitar zoom por doble toque y pinza
-        imgReceta.setOnTouchListener(ZoomListener(requireContext()))
 
         // 1. Recuperar el objeto Receta de los argumentos de forma segura según la API
         val receta =
@@ -132,6 +136,8 @@ class DetallesReceta : Fragment() {
                 }
 
                 imgReceta.load(data.imagenUrl)
+                imgZoom.load(data.imagenUrl)
+                imgZoom.setOnClickListener {    }
 
                 usuarioActual?.let {
 
@@ -145,61 +151,75 @@ class DetallesReceta : Fragment() {
 
             }
             btnFavorito.setOnClickListener {
-
                 val usuarioActual = FirebaseAuth.getInstance().currentUser
                     ?: return@setOnClickListener
-
                 viewLifecycleOwner.lifecycleScope.launch {
-
                     if (esFavorito) {
-
                         val eliminado = GuardadosManager.eliminarFavorito(
                             usuarioActual.uid,
                             data.id
                         )
-
                         if (eliminado) {
-
                             esFavorito = false
                             actualizarBotonFavorito()
                         }
-
                     } else {
-
                         val guardado = Guardado(
-
                             id = "${usuarioActual.uid}_${data.id}",
-
                             usuarioId = usuarioActual.uid,
-
                             recetaId = data.id
                         )
-
                         val agregado = GuardadosManager.agregarFavorito(
                             guardado
                         )
-
                         if (agregado) {
-
                             esFavorito = true
                             actualizarBotonFavorito()
                         }
                     }
                 }
             }
+            imgReceta.setOnClickListener {
+                layoutZoom.visibility = View.VISIBLE
+                imgZoom.scaleType = ImageView.ScaleType.FIT_CENTER
+                imgZoom.setOnTouchListener(ZoomListener(requireContext()))
+            }
+            layoutZoom.setOnTouchListener { _, event ->
+
+                if (event.action == android.view.MotionEvent.ACTION_DOWN) {
+
+                    val location = IntArray(2)
+                    imgZoom.getLocationOnScreen(location)
+
+                    val left = location[0]
+                    val top = location[1]
+                    val right = left + imgZoom.width
+                    val bottom = top + imgZoom.height
+
+                    if (event.rawX < left ||
+                        event.rawX > right ||
+                        event.rawY < top ||
+                        event.rawY > bottom
+                    ) {
+
+                        layoutZoom.visibility = View.GONE
+                        imgZoom.setOnTouchListener(null)
+                        imgZoom.scaleType = ImageView.ScaleType.FIT_CENTER
+                    }
+                }
+
+                false
+            }
 
             if (usuarioActual != null && usuarioActual.uid == data.usuarioId) {
-
                 btnEliminarReceta.visibility = View.VISIBLE
                 btnEliminarReceta.isEnabled = true
 
             } else {
-
                 btnEliminarReceta.visibility = View.GONE
                 btnEliminarReceta.isEnabled = false
             }
             btnEliminarReceta.setOnClickListener {
-
                 AlertDialog.Builder(requireContext())
                     .setTitle("Eliminar receta")
                     .setMessage("¿Seguro que deseas eliminar esta receta?")
@@ -210,6 +230,21 @@ class DetallesReceta : Fragment() {
                     .show()
             }
 
+        }
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+
+            if (layoutZoom.visibility == View.VISIBLE) {
+
+                layoutZoom.visibility = View.GONE
+                imgZoom.setOnTouchListener(null)
+                imgZoom.scaleType = ImageView.ScaleType.FIT_CENTER
+            } else {
+                (requireActivity() as MainActivity).cambiarFragmento(
+                    Recetas(),
+                    agregarAlBackStack = false,
+                    mostrarMenu = true
+                )
+            }
         }
 
     }

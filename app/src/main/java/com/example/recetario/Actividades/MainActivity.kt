@@ -9,10 +9,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
-import com.example.recetario.Fragmentos.DetallesReceta
-import com.example.recetario.Fragmentos.IniciarSesion
-import com.example.recetario.Fragmentos.Recetas
-import com.example.recetario.Modelos.Receta
+import com.example.recetario.Fragmentos.RecipeDetailFragment
+import com.example.recetario.Fragmentos.LoginFragment
+import com.example.recetario.Fragmentos.HomeFragment
+import com.example.recetario.Modelos.Recipe
 import com.example.recetario.R
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.example.recetario.Funciones.Navegacion
@@ -64,7 +64,7 @@ class MainActivity : AppCompatActivity() {
         if (savedInstanceState == null) {
 
             cambiarFragmento(
-                IniciarSesion(),
+                LoginFragment(),
                 agregarAlBackStack = false,
                 mostrarMenu = false
             )
@@ -89,7 +89,7 @@ class MainActivity : AppCompatActivity() {
 
                     intent.getParcelableExtra(
                         "EXTRA_RECETA",
-                        Receta::class.java
+                        Recipe::class.java
                     )
 
                 } else {
@@ -100,7 +100,7 @@ class MainActivity : AppCompatActivity() {
 
             receta?.let {
 
-                val fragment = DetallesReceta()
+                val fragment = RecipeDetailFragment()
 
                 fragment.arguments = Bundle().apply {
                     putParcelable("EXTRA_RECETA", it)
@@ -124,7 +124,7 @@ class MainActivity : AppCompatActivity() {
         if (destino == "Recetas") {
 
             cambiarFragmento(
-                Recetas(),
+                HomeFragment(),
                 agregarAlBackStack = false,
                 mostrarMenu = true
             )

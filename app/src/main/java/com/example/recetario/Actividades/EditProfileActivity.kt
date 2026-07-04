@@ -1,6 +1,5 @@
 package com.example.recetario.Actividades
 
-import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
@@ -18,13 +17,13 @@ import coil.load
 import com.example.recetario.Funciones.Permisos
 import com.example.recetario.Funciones.Sesion
 import com.example.recetario.Funciones.Validaciones
-import com.example.recetario.Manager.UsuarioManager
+import com.example.recetario.Manager.UserManager
 import com.example.recetario.R
 import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 
-class EditarPerfil : AppCompatActivity() {
+class EditProfileActivity : AppCompatActivity() {
 
     private lateinit var imgFotoEditarPerfil: ImageView
     private lateinit var txtCambiarFoto: TextView
@@ -69,7 +68,7 @@ class EditarPerfil : AppCompatActivity() {
             startActivity(
                 Intent(
                     this,
-                    CambiarContraseña::class.java
+                    ChangePasswordActivity::class.java
                 )
             )
 
@@ -117,8 +116,8 @@ class EditarPerfil : AppCompatActivity() {
 
                     val intent =
                         Intent(
-                            this@EditarPerfil,
-                            Perfil::class.java
+                            this@EditProfileActivity,
+                            ProfileActivity::class.java
                         ).apply {
 
                             flags =
@@ -196,7 +195,7 @@ class EditarPerfil : AppCompatActivity() {
                         "perfil_${usuarioActual.id}.jpg"
 
                     val nuevaUrl =
-                        UsuarioManager.subirFotoPerfil(
+                        UserManager.subirFotoPerfil(
                             nombreArchivo,
                             bytes
                         )
@@ -204,7 +203,7 @@ class EditarPerfil : AppCompatActivity() {
                     if (nuevaUrl == null) {
 
                         Toast.makeText(
-                            this@EditarPerfil,
+                            this@EditProfileActivity,
                             "No se pudo subir la foto.",
                             Toast.LENGTH_SHORT
                         ).show()
@@ -228,7 +227,7 @@ class EditarPerfil : AppCompatActivity() {
                     )
 
                 val actualizado =
-                    UsuarioManager.actualizarUsuario(
+                    UserManager.actualizarUsuario(
                         usuarioActualizado
                     )
 
@@ -238,15 +237,15 @@ class EditarPerfil : AppCompatActivity() {
                         usuarioActualizado
 
                     Toast.makeText(
-                        this@EditarPerfil,
+                        this@EditProfileActivity,
                         "Perfil actualizado correctamente.",
                         Toast.LENGTH_SHORT
                     ).show()
 
                     val intent =
                         Intent(
-                            this@EditarPerfil,
-                            Perfil::class.java
+                            this@EditProfileActivity,
+                            ProfileActivity::class.java
                         ).apply {
 
                             flags =
@@ -259,7 +258,7 @@ class EditarPerfil : AppCompatActivity() {
                 } else {
 
                     Toast.makeText(
-                        this@EditarPerfil,
+                        this@EditProfileActivity,
                         "No fue posible actualizar el perfil.",
                         Toast.LENGTH_SHORT
                     ).show()
@@ -269,7 +268,7 @@ class EditarPerfil : AppCompatActivity() {
             } catch (e: Exception) {
 
                 Toast.makeText(
-                    this@EditarPerfil,
+                    this@EditProfileActivity,
                     "Ocurrió un error al actualizar el perfil.",
                     Toast.LENGTH_SHORT
                 ).show()

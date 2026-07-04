@@ -1,6 +1,5 @@
 package com.example.recetario.Actividades
 
-import android.Manifest
 import java.util.UUID
 import android.app.AlertDialog
 import android.content.pm.PackageManager
@@ -18,25 +17,24 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.recetario.Funciones.Navegacion
 import com.example.recetario.Funciones.Permisos
 import com.example.recetario.Funciones.Sesion
 import com.example.recetario.Funciones.Validaciones
-import com.example.recetario.Manager.IngredientesManager
-import com.example.recetario.Manager.PasosManager
-import com.example.recetario.Manager.RecetaManager
+import com.example.recetario.Manager.IngredientManager
+import com.example.recetario.Manager.StepManager
+import com.example.recetario.Manager.RecipeManager
 import com.example.recetario.Modelos.Ingredientes
 import com.example.recetario.Modelos.Pasos
-import com.example.recetario.Modelos.Receta
+import com.example.recetario.Modelos.Recipe
 import com.example.recetario.R
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 
-class Publicacion : AppCompatActivity() {
+class CreateRecipeActivity : AppCompatActivity() {
 
     private var selectedMediaUri: Uri? = null
     private var tipoContenido = ""
@@ -93,7 +91,7 @@ class Publicacion : AppCompatActivity() {
             validarYPublicar()
         }
         onBackPressedDispatcher.addCallback(this) {
-            Navegacion.volverARecetas(this@Publicacion)
+            Navegacion.volverARecetas(this@CreateRecipeActivity)
         }
     }
 
@@ -203,7 +201,7 @@ class Publicacion : AppCompatActivity() {
 
             val nombreArchivo = "receta_${System.currentTimeMillis()}.jpg"
 
-            val urlImagen = RecetaManager.subirImagen(
+            val urlImagen = RecipeManager.subirImagen(
                 nombreArchivo,
                 bytesImagen
             )
@@ -217,7 +215,7 @@ class Publicacion : AppCompatActivity() {
             // Receta
             //==========================
 
-            val receta = Receta(
+            val receta = Recipe(
                 id = UUID.randomUUID().toString(),
                 nombreUsuario = "${Sesion.usuario?.nombre} ${Sesion.usuario?.apellido}",
                 usuarioId = Sesion.usuario?.id ?: "",
@@ -226,7 +224,7 @@ class Publicacion : AppCompatActivity() {
                 imagenUrl = urlImagen
             )
 
-            val recetaCreada = RecetaManager.crearReceta(receta)
+            val recetaCreada = RecipeManager.crearReceta(receta)
 
             if (recetaCreada == null) {
                 mostrarError("No fue posible guardar la receta.")
@@ -239,7 +237,7 @@ class Publicacion : AppCompatActivity() {
 
             for (ingrediente in listaIngredientes) {
 
-                val ok = IngredientesManager.crearIngrediente(
+                val ok = IngredientManager.crearIngrediente(
 
                     Ingredientes(
                         id = UUID.randomUUID().toString(),
@@ -261,7 +259,7 @@ class Publicacion : AppCompatActivity() {
 
             for ((indice, paso) in listaPasos.withIndex()) {
 
-                val ok = PasosManager.crearPaso(
+                val ok = StepManager.crearPaso(
 
                     Pasos(
                         id = UUID.randomUUID().toString(),
@@ -278,7 +276,7 @@ class Publicacion : AppCompatActivity() {
             }
 
             Toast.makeText(
-                this@Publicacion,
+                this@CreateRecipeActivity,
                 "Receta publicada correctamente.",
                 Toast.LENGTH_LONG
             ).show()

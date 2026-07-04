@@ -5,7 +5,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
-import com.example.recetario.Modelos.Receta
+import com.example.recetario.Modelos.Recipe
 import com.example.recetario.R
 
 class RecetasViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -23,8 +23,8 @@ class RecetasViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         view.findViewById(R.id.txtRecetaUsuario)
 
     fun render(
-        receta: Receta,
-        onClickListener: (Receta) -> Unit
+        receta: Recipe,
+        onClickListener: (Recipe) -> Unit
     ) {
 
         txtRecetaNombre.text = receta.nombre

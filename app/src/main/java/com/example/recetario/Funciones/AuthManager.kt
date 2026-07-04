@@ -2,7 +2,7 @@ package com.example.recetario.Funciones
 
 import com.google.firebase.auth.FirebaseAuth
 
-object Authentication {
+object AuthManager {
 
     private val auth = FirebaseAuth.getInstance()
 

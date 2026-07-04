@@ -1,24 +1,24 @@
 package com.example.recetario.Manager
 
-import com.example.recetario.Modelos.Ingredientes
+import com.example.recetario.Modelos.Pasos
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
-object IngredientesManager {
+object StepManager {
 
     private val db = FirebaseFirestore.getInstance()
-    private val coleccion = db.collection("ingredientes")
+    private val coleccion = db.collection("pasos")
 
-    suspend fun crearIngrediente(ingrediente: Ingredientes): Boolean {
+    suspend fun crearPaso(paso: Pasos): Boolean {
 
         return try {
 
             val documento = coleccion.document()
 
-            ingrediente.id = documento.id
+            paso.id = documento.id
 
             documento
-                .set(ingrediente)
+                .set(paso)
                 .await()
 
             true
@@ -30,7 +30,7 @@ object IngredientesManager {
         }
     }
 
-    suspend fun obtenerIngredientes(recetaId: String): List<Ingredientes> {
+    suspend fun obtenerPasos(recetaId: String): List<Pasos> {
 
         return try {
 
@@ -38,7 +38,8 @@ object IngredientesManager {
                 .whereEqualTo("recetaId", recetaId)
                 .get()
                 .await()
-                .toObjects(Ingredientes::class.java)
+                .toObjects(Pasos::class.java)
+                .sortedBy { it.numero } // 👈 ordenamos en Kotlin en vez de Firestore
 
         } catch (e: Exception) {
 
@@ -47,7 +48,7 @@ object IngredientesManager {
         }
     }
 
-    suspend fun eliminarIngredientes(recetaId: String): Boolean {
+    suspend fun eliminarPasos(recetaId: String): Boolean {
 
         return try {
 

@@ -26,16 +26,16 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".Actividades.Publicacion"
+            android:name=".Actividades.CreateRecipeActivity"
             android:exported="false" />
         <activity
-            android:name=".Actividades.Perfil"
+            android:name=".Actividades.ProfileActivity"
             android:exported="false" />
         <activity
-            android:name=".Actividades.EditarPerfil"
+            android:name=".Actividades.EditProfileActivity"
             android:exported="false" />
         <activity
-            android:name=".Actividades.CambiarContraseña"
+            android:name=".Actividades.ChangePasswordActivity"
             android:exported="false" />
     </application>
 

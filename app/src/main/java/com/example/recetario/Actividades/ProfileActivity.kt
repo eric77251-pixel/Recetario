@@ -9,20 +9,20 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.recetario.Adapter.PerfilAdapter
 import com.example.recetario.Funciones.Navegacion
 import androidx.activity.addCallback
-import com.example.recetario.Modelos.Receta
+import com.example.recetario.Modelos.Recipe
 import com.example.recetario.R
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.lifecycle.lifecycleScope
 import com.example.recetario.Manager.GuardadosManager
-import com.example.recetario.Manager.RecetaManager
+import com.example.recetario.Manager.RecipeManager
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import android.widget.ImageView
 import android.widget.TextView
 import coil.load
-import com.example.recetario.Manager.UsuarioManager
+import com.example.recetario.Manager.UserManager
 
-class Perfil : AppCompatActivity() {
+class ProfileActivity : AppCompatActivity() {
 
     private lateinit var recyclerFavoritas: RecyclerView
     private lateinit var recyclerPublicadas: RecyclerView
@@ -30,8 +30,8 @@ class Perfil : AppCompatActivity() {
     private lateinit var adapterFavoritas: PerfilAdapter
     private lateinit var adapterPublicadas: PerfilAdapter
 
-    private var listaFavoritas = mutableListOf<Receta>()
-    private var listaPublicadas = mutableListOf<Receta>()
+    private var listaFavoritas = mutableListOf<Recipe>()
+    private var listaPublicadas = mutableListOf<Recipe>()
     private lateinit var bottomNavigation: BottomNavigationView
 
     private lateinit var bottonEditarPerfil: Button
@@ -64,10 +64,10 @@ class Perfil : AppCompatActivity() {
 
         iniciarRecyclerViews()
         onBackPressedDispatcher.addCallback(this) {
-            Navegacion.volverARecetas(this@Perfil)
+            Navegacion.volverARecetas(this@ProfileActivity)
         }
         bottonEditarPerfil.setOnClickListener {
-            val activity= Intent(this, EditarPerfil::class.java)
+            val activity= Intent(this, EditProfileActivity::class.java)
             startActivity(activity)
             this.finish()
         }
@@ -104,7 +104,7 @@ class Perfil : AppCompatActivity() {
                     ?: return@launch
 
             val usuario =
-                UsuarioManager.obtenerUsuario(firebaseUser.uid)
+                UserManager.obtenerUsuario(firebaseUser.uid)
                     ?: return@launch
 
             txtNombreUsuario.text =
@@ -174,7 +174,7 @@ class Perfil : AppCompatActivity() {
             for (favorito in favoritos) {
 
                 val receta =
-                    RecetaManager.obtenerReceta(favorito.recetaId)
+                    RecipeManager.obtenerReceta(favorito.recetaId)
 
                 if (receta != null) {
                     listaFavoritas.add(receta)
@@ -193,7 +193,7 @@ class Perfil : AppCompatActivity() {
             val usuario = FirebaseAuth.getInstance().currentUser ?: return@launch
 
             val recetas =
-                RecetaManager.obtenerRecetasUsuario(usuario.uid)
+                RecipeManager.obtenerRecetasUsuario(usuario.uid)
 
             listaPublicadas.clear()
             listaPublicadas.addAll(recetas)
@@ -205,7 +205,7 @@ class Perfil : AppCompatActivity() {
     }
 
 
-    private fun abrirDetalle(receta: Receta) {
+    private fun abrirDetalle(receta: Recipe) {
 
         val intent = Intent(this, MainActivity::class.java)
 

@@ -3,10 +3,10 @@ package com.example.recetario.Adapter
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.example.recetario.Modelos.Receta
+import com.example.recetario.Modelos.Recipe
 import com.example.recetario.R
 
-class RecetasAdapter(private val recetaContent: List<Receta>, private val onClickListener: (Receta) -> Unit) : RecyclerView.Adapter<RecetasViewHolder>() {
+class RecetasAdapter(private val recetaContent: List<Recipe>, private val onClickListener: (Recipe) -> Unit) : RecyclerView.Adapter<RecetasViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecetasViewHolder {
         val view = LayoutInflater

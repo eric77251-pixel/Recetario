@@ -11,15 +11,15 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import com.example.recetario.Funciones.Authentication
+import com.example.recetario.Funciones.AuthManager
 import com.example.recetario.Funciones.Validaciones
-import com.example.recetario.Manager.UsuarioManager
+import com.example.recetario.Manager.UserManager
 import com.example.recetario.Modelos.Usuario
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import com.example.recetario.R
 
-class RegistrarUsuario : Fragment() {
+class RegisterFragment : Fragment() {
 
     private lateinit var txtNombre: EditText
     private lateinit var txtApellido: EditText
@@ -49,7 +49,7 @@ class RegistrarUsuario : Fragment() {
 
             btnCrearUsuario.isEnabled = false
 
-            Authentication.crearUsuario(
+            AuthManager.crearUsuario(
                 txtCorreo.text.toString().trim(),
                 txtPassword.text.toString()
             ) { exito, mensaje ->
@@ -92,7 +92,7 @@ class RegistrarUsuario : Fragment() {
 
                 viewLifecycleOwner.lifecycleScope.launch {
 
-                    val guardado = UsuarioManager.crearUsuario(usuario)
+                    val guardado = UserManager.crearUsuario(usuario)
 
                     if (guardado) {
 

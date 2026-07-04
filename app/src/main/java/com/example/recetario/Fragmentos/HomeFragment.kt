@@ -10,22 +10,22 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.recetario.Actividades.Publicacion
+import com.example.recetario.Actividades.CreateRecipeActivity
 import com.example.recetario.Adapter.RecetasAdapter
-import com.example.recetario.Manager.RecetaManager
-import com.example.recetario.Modelos.Receta
+import com.example.recetario.Manager.RecipeManager
+import com.example.recetario.Modelos.Recipe
 import com.example.recetario.R
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.launch
 
-class Recetas : Fragment() {
+class HomeFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var searchView: SearchView
     private lateinit var adapter: RecetasAdapter
 
-    private val listaCompleta = mutableListOf<Receta>()
-    private val listaRecetas = mutableListOf<Receta>()
+    private val listaCompleta = mutableListOf<Recipe>()
+    private val listaRecetas = mutableListOf<Recipe>()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -65,7 +65,7 @@ class Recetas : Fragment() {
 
 
         agregarReceta.setOnClickListener {
-            val intent = Intent(requireContext(), Publicacion::class.java)
+            val intent = Intent(requireContext(), CreateRecipeActivity::class.java)
             startActivity(intent)
         }
         cargarRecetas()
@@ -75,7 +75,7 @@ class Recetas : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
 
-            val recetas = RecetaManager.obtenerRecetas()
+            val recetas = RecipeManager.obtenerRecetas()
 
             listaCompleta.clear()
             listaCompleta.addAll(recetas)
@@ -87,9 +87,9 @@ class Recetas : Fragment() {
         }
     }
 
-    private fun abrirDetalle(receta: Receta) {
+    private fun abrirDetalle(receta: Recipe) {
 
-        val fragment = DetallesReceta()
+        val fragment = RecipeDetailFragment()
 
         val args = Bundle()
         args.putParcelable("EXTRA_RECETA", receta)

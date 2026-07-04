@@ -10,7 +10,7 @@ import com.example.recetario.R
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 
-class CambiarContraseña : AppCompatActivity() {
+class ChangePasswordActivity : AppCompatActivity() {
 
     // Campos del formulario
     private lateinit var txtPasswordActual: EditText

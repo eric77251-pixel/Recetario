@@ -5,7 +5,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
-import com.example.recetario.Modelos.Receta
+import com.example.recetario.Modelos.Recipe
 import com.example.recetario.R
 
 class PerfilViewHolder(
@@ -19,8 +19,8 @@ class PerfilViewHolder(
         view.findViewById(R.id.txtNombreReceta)
 
     fun render(
-        receta: Receta,
-        onClick: (Receta) -> Unit
+        receta: Recipe,
+        onClick: (Recipe) -> Unit
     ) {
 
         txtNombreReceta.text = receta.nombre

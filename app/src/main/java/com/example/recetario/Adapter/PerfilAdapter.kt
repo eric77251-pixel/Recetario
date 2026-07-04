@@ -3,13 +3,12 @@ package com.example.recetario.Adapter
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.example.recetario.Modelos.Receta
+import com.example.recetario.Modelos.Recipe
 import com.example.recetario.R
-import com.example.recetario.Adapter.PerfilViewHolder
 
 class PerfilAdapter(
-    private val listaRecetas: List<Receta>,
-    private val onClick: (Receta) -> Unit
+    private val listaRecetas: List<Recipe>,
+    private val onClick: (Recipe) -> Unit
 ) : RecyclerView.Adapter<PerfilViewHolder>() {
 
     override fun onCreateViewHolder(

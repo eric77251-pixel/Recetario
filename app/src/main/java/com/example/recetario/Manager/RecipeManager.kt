@@ -1,17 +1,17 @@
 package com.example.recetario.Manager
 
 import com.example.recetario.Funciones.Supabase
-import com.example.recetario.Modelos.Receta
+import com.example.recetario.Modelos.Recipe
 import com.google.firebase.firestore.FirebaseFirestore
 import io.github.jan.supabase.storage.storage
 import kotlinx.coroutines.tasks.await
 
-object RecetaManager {
+object RecipeManager {
 
     private val db = FirebaseFirestore.getInstance()
     private val recetas = db.collection("recetas")
 
-    suspend fun crearReceta(receta: Receta): Receta? {
+    suspend fun crearReceta(receta: Recipe): Recipe? {
         return try {
             val docRef = recetas.document()
             receta.id = docRef.id
@@ -25,39 +25,39 @@ object RecetaManager {
         }
     }
 
-    suspend fun obtenerRecetas(): List<Receta> {
+    suspend fun obtenerRecetas(): List<Recipe> {
         return try {
-            recetas.get().await().toObjects(Receta::class.java)
+            recetas.get().await().toObjects(Recipe::class.java)
         } catch (e: Exception) {
             e.printStackTrace()
             emptyList()
         }
     }
 
-    suspend fun obtenerReceta(id: String): Receta? {
+    suspend fun obtenerReceta(id: String): Recipe? {
         return try {
             recetas.document(id).get().await()
-                .toObject(Receta::class.java)
+                .toObject(Recipe::class.java)
         } catch (e: Exception) {
             e.printStackTrace()
             null
         }
     }
 
-    suspend fun obtenerRecetasUsuario(usuarioId: String): List<Receta> {
+    suspend fun obtenerRecetasUsuario(usuarioId: String): List<Recipe> {
         return try {
             recetas
                 .whereEqualTo("usuarioId", usuarioId)
                 .get()
                 .await()
-                .toObjects(Receta::class.java)
+                .toObjects(Recipe::class.java)
         } catch (e: Exception) {
             e.printStackTrace()
             emptyList()
         }
     }
 
-    suspend fun actualizarReceta(receta: Receta): Boolean {
+    suspend fun actualizarReceta(receta: Recipe): Boolean {
         return try {
             recetas.document(receta.id).set(receta).await()
             true
@@ -77,10 +77,10 @@ object RecetaManager {
         }
     }
 
-    suspend fun buscarRecetas(texto: String): List<Receta> {
+    suspend fun buscarRecetas(texto: String): List<Recipe> {
         return try {
             recetas.get().await()
-                .toObjects(Receta::class.java)
+                .toObjects(Recipe::class.java)
                 .filter {
                     it.nombre.contains(texto, ignoreCase = true)
                 }

@@ -11,11 +11,11 @@ import androidx.fragment.app.Fragment
 import android.widget.FrameLayout
 import androidx.lifecycle.lifecycleScope
 import com.example.recetario.Funciones.ZoomListener
-import com.example.recetario.Manager.IngredientesManager
-import com.example.recetario.Manager.PasosManager
-import com.example.recetario.Manager.UsuarioManager
-import com.example.recetario.Manager.RecetaManager
-import com.example.recetario.Modelos.Receta
+import com.example.recetario.Manager.IngredientManager
+import com.example.recetario.Manager.StepManager
+import com.example.recetario.Manager.UserManager
+import com.example.recetario.Manager.RecipeManager
+import com.example.recetario.Modelos.Recipe
 import com.example.recetario.R
 import kotlinx.coroutines.launch
 import android.os.Build
@@ -27,7 +27,7 @@ import com.google.firebase.auth.FirebaseAuth
 import android.widget.Toast
 import androidx.activity.addCallback
 import com.example.recetario.Actividades.MainActivity
-class DetallesReceta : Fragment() {
+class RecipeDetailFragment : Fragment() {
 
     private lateinit var btnEliminarReceta: MaterialButton
     private lateinit var imgReceta: ImageView
@@ -77,7 +77,7 @@ class DetallesReceta : Fragment() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 arguments?.getParcelable(
                     "EXTRA_RECETA",
-                    Receta::class.java
+                    Recipe::class.java
                 )
             } else {
                 @Suppress("DEPRECATION")
@@ -92,7 +92,7 @@ class DetallesReceta : Fragment() {
             viewLifecycleOwner.lifecycleScope.launch {
 
                 // Obtener usuario
-                val usuario = UsuarioManager.obtenerUsuario(
+                val usuario = UserManager.obtenerUsuario(
                     data.usuarioId
                 )
 
@@ -105,7 +105,7 @@ class DetallesReceta : Fragment() {
 
                 // Obtener ingredientes
                 val ingredientes =
-                    IngredientesManager.obtenerIngredientes(data.id)
+                    IngredientManager.obtenerIngredientes(data.id)
 
                 txtIngredientes.text =
                     ingredientes.joinToString("\n") {
@@ -117,7 +117,7 @@ class DetallesReceta : Fragment() {
 
                     try {
 
-                        val pasos = PasosManager.obtenerPasos(data.id)
+                        val pasos = StepManager.obtenerPasos(data.id)
 
                         txtProceso.text = if (pasos.isNotEmpty()) {
                             pasos.joinToString("\n") { paso ->
@@ -240,7 +240,7 @@ class DetallesReceta : Fragment() {
                 imgZoom.scaleType = ImageView.ScaleType.FIT_CENTER
             } else {
                 (requireActivity() as MainActivity).cambiarFragmento(
-                    Recetas(),
+                    HomeFragment(),
                     agregarAlBackStack = false,
                     mostrarMenu = true
                 )
@@ -248,14 +248,14 @@ class DetallesReceta : Fragment() {
         }
 
     }
-    private fun eliminarReceta(receta: Receta) {
+    private fun eliminarReceta(receta: Recipe) {
 
         viewLifecycleOwner.lifecycleScope.launch {
 
             try {
-                IngredientesManager.eliminarIngredientes(receta.id)
-                PasosManager.eliminarPasos(receta.id)
-                val ok = RecetaManager.eliminarReceta(receta.id)
+                IngredientManager.eliminarIngredientes(receta.id)
+                StepManager.eliminarPasos(receta.id)
+                val ok = RecipeManager.eliminarReceta(receta.id)
 
                 if (ok) {
 

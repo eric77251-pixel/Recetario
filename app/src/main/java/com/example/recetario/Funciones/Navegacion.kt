@@ -3,8 +3,8 @@ package com.example.recetario.Funciones
 import android.app.Activity
 import android.content.Intent
 import com.example.recetario.Actividades.MainActivity
-import com.example.recetario.Actividades.Perfil
-import com.example.recetario.Actividades.Publicacion
+import com.example.recetario.Actividades.ProfileActivity
+import com.example.recetario.Actividades.CreateRecipeActivity
 
 object Navegacion {
 
@@ -28,10 +28,10 @@ object Navegacion {
 
     fun irPerfil(activity: Activity): Boolean {
 
-        if (activity !is Perfil) {
+        if (activity !is ProfileActivity) {
 
             activity.startActivity(
-                Intent(activity, Perfil::class.java)
+                Intent(activity, ProfileActivity::class.java)
             )
 
             activity.finish()
@@ -44,10 +44,10 @@ object Navegacion {
 
     fun irPublicacion(activity: Activity): Boolean {
 
-        if (activity !is Publicacion) {
+        if (activity !is CreateRecipeActivity) {
 
             activity.startActivity(
-                Intent(activity, Publicacion::class.java)
+                Intent(activity, CreateRecipeActivity::class.java)
             )
 
             activity.finish()

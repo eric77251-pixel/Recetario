@@ -1,27 +1,24 @@
 package com.example.recetario.Fragmentos
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
-import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import com.example.recetario.Actividades.CambiarContraseña
 import com.example.recetario.Actividades.MainActivity
 import com.example.recetario.Funciones.Validaciones
 import com.example.recetario.R
-import com.example.recetario.Funciones.Authentication
+import com.example.recetario.Funciones.AuthManager
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
-import com.example.recetario.Manager.UsuarioManager
+import com.example.recetario.Manager.UserManager
 import com.example.recetario.Funciones.Sesion
 
 
-class IniciarSesion : Fragment() {
+class LoginFragment : Fragment() {
 
     private lateinit var txtUsuario: EditText
     private lateinit var txtContraseña: EditText
@@ -53,7 +50,7 @@ class IniciarSesion : Fragment() {
 
         btnCrearUsuario.setOnClickListener {
             (requireActivity() as MainActivity).cambiarFragmento(
-                RegistrarUsuario(),
+                RegisterFragment(),
                 agregarAlBackStack = true,
                 mostrarMenu = false
             )
@@ -91,7 +88,7 @@ class IniciarSesion : Fragment() {
         // Evita múltiples clics
         btnAcceder.isEnabled = false
 
-        Authentication.iniciarSesion(
+        AuthManager.iniciarSesion(
             correo,
             contraseña
         ) { exito, mensaje ->
@@ -110,7 +107,7 @@ class IniciarSesion : Fragment() {
             }
 
             // Usuario autenticado en Firebase
-            val firebaseUser = Authentication.obtenerUsuario()
+            val firebaseUser = AuthManager.obtenerUsuario()
 
             if (firebaseUser == null) {
 
@@ -128,7 +125,7 @@ class IniciarSesion : Fragment() {
             // Buscar los datos del usuario en Supabase
             viewLifecycleOwner.lifecycleScope.launch {
 
-                val usuario = UsuarioManager.obtenerUsuario(firebaseUser.uid.toString())
+                val usuario = UserManager.obtenerUsuario(firebaseUser.uid.toString())
 
                 btnAcceder.isEnabled = true
 
@@ -140,7 +137,7 @@ class IniciarSesion : Fragment() {
                         Toast.LENGTH_LONG
                     ).show()
 
-                    Authentication.cerrarSesion()
+                    AuthManager.cerrarSesion()
                     return@launch
                 }
 
@@ -155,7 +152,7 @@ class IniciarSesion : Fragment() {
 
                 // Ir al fragmento principal
                 (requireActivity() as MainActivity).cambiarFragmento(
-                    Recetas(),
+                    HomeFragment(),
                     agregarAlBackStack = false,
                     mostrarMenu = true
                 )

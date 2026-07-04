@@ -6,7 +6,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class Receta(
+data class Recipe(
 
  var id: String = "",
 
@@ -48,13 +48,13 @@ data class Receta(
 
  override fun describeContents(): Int = 0
 
- companion object CREATOR : Parcelable.Creator<Receta> {
+ companion object CREATOR : Parcelable.Creator<Recipe> {
 
-  override fun createFromParcel(parcel: Parcel): Receta {
-   return Receta(parcel)
+  override fun createFromParcel(parcel: Parcel): Recipe {
+   return Recipe(parcel)
   }
 
-  override fun newArray(size: Int): Array<Receta?> {
+  override fun newArray(size: Int): Array<Recipe?> {
    return arrayOfNulls(size)
   }
  }

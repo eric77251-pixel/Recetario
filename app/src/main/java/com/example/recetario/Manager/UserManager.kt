@@ -5,7 +5,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import com.example.recetario.Funciones.Supabase
 import io.github.jan.supabase.storage.storage
-object UsuarioManager {
+object UserManager {
 
     private val db = FirebaseFirestore.getInstance()
     private val usuarios = db.collection("usuarios")

@@ -1,15 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Paleta oscura de la app Recetario -->
-    <color name="recipe_primary">#FFB17A</color>
-    <color name="recipe_primary_dark">#D66A2A</color>
-    <color name="recipe_secondary">#95D6B0</color>
-    <color name="recipe_background">#17120F</color>
-    <color name="recipe_surface">#241B14</color>
-    <color name="recipe_surface_variant">#342820</color>
-    <color name="recipe_text_primary">#FFF4EA</color>
-    <color name="recipe_text_secondary">#D7C3B4</color>
-    <color name="recipe_outline">#695547</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- Paleta oscura con acentos pastel -->
+    <color name="recipe_primary">#FF8BB8</color>
+    <color name="recipe_primary_dark">#FFB3D0</color>
+    <color name="recipe_secondary">#9CC6FF</color>
+    <color name="recipe_background">#171018</color>
+    <color name="recipe_surface">#241A25</color>
+    <color name="recipe_surface_variant">#332338</color>
+    <color name="recipe_text_primary">#FFF7FB</color>
+    <color name="recipe_text_secondary">#D7BFD0</color>
+    <color name="recipe_outline">#594054</color>
     <color name="recipe_error">#FFB4AB</color>
-    <color name="recipe_media_placeholder">#110D0B</color>
+    <color name="recipe_media_placeholder">#120C13</color>
+    <color name="recipe_star">#FFE082</color>
+    <color name="recipe_pastel_blue">#7FAFEF</color>
+    <color name="recipe_pastel_cream">#EAD18B</color>
+
+    <!-- Colores específicos para textos sobre banners en modo oscuro -->
+    <color name="banner_text_primary">#FFF7FB</color>
+    <color name="banner_text_secondary">#FFE1F0</color>
+    <color name="header_badge_text">#FFF7FB</color>
 </resources>

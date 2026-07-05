@@ -3,16 +3,24 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <!-- Paleta clara de la app Recetario -->
-    <color name="recipe_primary">#D66A2A</color>
-    <color name="recipe_primary_dark">#A84D1D</color>
-    <color name="recipe_secondary">#2E7D57</color>
-    <color name="recipe_background">#FFF8F1</color>
+    <!-- Paleta pastel inspirada en postres: rosado, crema, fresa y estrellas -->
+    <color name="recipe_primary">#E84D8A</color>
+    <color name="recipe_primary_dark">#B73267</color>
+    <color name="recipe_secondary">#6D9EF8</color>
+    <color name="recipe_background">#FFF6FA</color>
     <color name="recipe_surface">#FFFFFFFF</color>
-    <color name="recipe_surface_variant">#F5E9DD</color>
-    <color name="recipe_text_primary">#241B14</color>
-    <color name="recipe_text_secondary">#6D5B4D</color>
-    <color name="recipe_outline">#E0C7B3</color>
+    <color name="recipe_surface_variant">#FFE5F0</color>
+    <color name="recipe_text_primary">#2A1E28</color>
+    <color name="recipe_text_secondary">#765D6F</color>
+    <color name="recipe_outline">#F3C7D8</color>
     <color name="recipe_error">#B3261E</color>
-    <color name="recipe_media_placeholder">#33261F</color>
+    <color name="recipe_media_placeholder">#33242D</color>
+    <color name="recipe_star">#FFD66B</color>
+    <color name="recipe_pastel_blue">#B9D7FF</color>
+    <color name="recipe_pastel_cream">#FFF0C7</color>
+
+    <!-- Colores específicos para textos sobre banners claros -->
+    <color name="banner_text_primary">#35172A</color>
+    <color name="banner_text_secondary">#6B425A</color>
+    <color name="header_badge_text">#4A1635</color>
 </resources>

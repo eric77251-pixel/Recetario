@@ -8,7 +8,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.recetario.R
 import com.example.recetario.activities.ProfileActivity
@@ -45,11 +45,7 @@ class MyRecipesFragment : Fragment() {
             (activity as? ProfileActivity)?.abrirDetalle(recipe)
         }
 
-        recyclerMyRecipes.layoutManager = LinearLayoutManager(
-            requireContext(),
-            LinearLayoutManager.HORIZONTAL,
-            false
-        )
+        recyclerMyRecipes.layoutManager = GridLayoutManager(requireContext(), 2)
         recyclerMyRecipes.adapter = adapter
         recyclerMyRecipes.isNestedScrollingEnabled = false
 

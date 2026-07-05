@@ -2,28 +2,30 @@ package com.example.recetario.activities
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.activity.addCallback
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.viewpager2.widget.ViewPager2
 import coil.load
 import com.example.recetario.R
-import com.example.recetario.utils.SystemBarUtils
-import com.example.recetario.utils.AuthManager
+import com.example.recetario.adapter.ProfileSectionsPagerAdapter
 import com.example.recetario.data.RecipeManager
 import com.example.recetario.data.SavedRecipeManager
 import com.example.recetario.data.UserManager
-import com.example.recetario.fragments.MyRecipesFragment
-import com.example.recetario.fragments.SavedRecipesFragment
 import com.example.recetario.model.Recipe
+import com.example.recetario.utils.AuthManager
 import com.example.recetario.utils.NavigationHelper
 import com.example.recetario.utils.NetworkUtils
 import com.example.recetario.utils.SessionManager
+import com.example.recetario.utils.SystemBarUtils
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
@@ -33,14 +35,20 @@ class ProfileActivity : AppCompatActivity() {
     private lateinit var bottomNavigation: BottomNavigationView
     private lateinit var btnEditarPerfil: Button
     private lateinit var btnCerrarSesion: Button
-    private lateinit var btnTabGuardadas: Button
-    private lateinit var btnTabMisRecetas: Button
 
     private lateinit var imgFotoPerfil: ImageView
     private lateinit var txtNombreUsuario: TextView
     private lateinit var txtCorreoUsuario: TextView
     private lateinit var txtCantidadRecetas: TextView
     private lateinit var txtFavoritas: TextView
+
+    private lateinit var tabGuardadas: LinearLayout
+    private lateinit var tabMisRecetas: LinearLayout
+    private lateinit var txtTabGuardadas: TextView
+    private lateinit var txtTabMisRecetas: TextView
+    private lateinit var indicatorGuardadas: View
+    private lateinit var indicatorMisRecetas: View
+    private lateinit var viewPagerProfile: ViewPager2
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,12 +58,8 @@ class ProfileActivity : AppCompatActivity() {
         inicializarVistas()
         configurarNavegacion()
         configurarEventos()
+        configurarSeccionesDeslizables()
         cargarDatosPerfil()
-
-        if (savedInstanceState == null) {
-            mostrarFragmentoPerfil(SavedRecipesFragment())
-            marcarTabActiva(esGuardadas = true)
-        }
     }
 
     private fun inicializarVistas() {
@@ -67,13 +71,15 @@ class ProfileActivity : AppCompatActivity() {
         bottomNavigation = findViewById(R.id.bottomNavigation)
         btnEditarPerfil = findViewById(R.id.btnEditarPerfil)
         btnCerrarSesion = findViewById(R.id.btnCerrarSesion)
-        btnTabGuardadas = findViewById(R.id.btnTabGuardadas)
-        btnTabMisRecetas = findViewById(R.id.btnTabMisRecetas)
+        tabGuardadas = findViewById(R.id.tabGuardadas)
+        tabMisRecetas = findViewById(R.id.tabMisRecetas)
+        txtTabGuardadas = findViewById(R.id.txtTabGuardadas)
+        txtTabMisRecetas = findViewById(R.id.txtTabMisRecetas)
+        indicatorGuardadas = findViewById(R.id.indicatorGuardadas)
+        indicatorMisRecetas = findViewById(R.id.indicatorMisRecetas)
+        viewPagerProfile = findViewById(R.id.viewPagerProfile)
     }
 
-    /**
-     * Mantiene la navegación inferior coherente con las demás pantallas principales.
-     */
     private fun configurarNavegacion() {
         bottomNavigation.selectedItemId = R.id.nav_perfil
 
@@ -91,10 +97,6 @@ class ProfileActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * ProfileActivity funciona como contenedor: cambia entre las secciones internas
-     * del perfil sin crear actividades adicionales.
-     */
     private fun configurarEventos() {
         btnEditarPerfil.setOnClickListener {
             startActivity(Intent(this, EditProfileActivity::class.java))
@@ -104,21 +106,50 @@ class ProfileActivity : AppCompatActivity() {
             confirmarCierreSesion()
         }
 
-        btnTabGuardadas.setOnClickListener {
-            mostrarFragmentoPerfil(SavedRecipesFragment())
-            marcarTabActiva(esGuardadas = true)
+        tabGuardadas.setOnClickListener {
+            viewPagerProfile.currentItem = 0
         }
 
-        btnTabMisRecetas.setOnClickListener {
-            mostrarFragmentoPerfil(MyRecipesFragment())
-            marcarTabActiva(esGuardadas = false)
+        tabMisRecetas.setOnClickListener {
+            viewPagerProfile.currentItem = 1
         }
     }
 
     /**
-     * Cierra la sesión de Firebase y limpia los datos del usuario en memoria.
-     * Luego regresa a MainActivity, donde se muestra nuevamente el LoginFragment.
+     * Usa ViewPager2 para permitir cambiar entre secciones del perfil
+     * con gestos horizontales, manteniendo una experiencia más similar
+     * a Instagram o X.
      */
+    private fun configurarSeccionesDeslizables() {
+        viewPagerProfile.adapter = ProfileSectionsPagerAdapter(this)
+        viewPagerProfile.offscreenPageLimit = 2
+
+        viewPagerProfile.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
+                actualizarEstadoTabs(position)
+            }
+        })
+
+        actualizarEstadoTabs(0)
+    }
+
+    private fun actualizarEstadoTabs(position: Int) {
+        val colorActivo = ContextCompat.getColor(this, R.color.recipe_primary)
+        val colorInactivo = ContextCompat.getColor(this, R.color.recipe_text_secondary)
+
+        val guardadasActiva = position == 0
+
+        txtTabGuardadas.setTextColor(if (guardadasActiva) colorActivo else colorInactivo)
+        txtTabMisRecetas.setTextColor(if (guardadasActiva) colorInactivo else colorActivo)
+
+        txtTabGuardadas.alpha = if (guardadasActiva) 1f else 0.72f
+        txtTabMisRecetas.alpha = if (guardadasActiva) 0.72f else 1f
+
+        indicatorGuardadas.visibility = if (guardadasActiva) View.VISIBLE else View.INVISIBLE
+        indicatorMisRecetas.visibility = if (guardadasActiva) View.INVISIBLE else View.VISIBLE
+    }
+
     private fun confirmarCierreSesion() {
         AlertDialog.Builder(this)
             .setTitle("Cerrar sesión")
@@ -136,17 +167,6 @@ class ProfileActivity : AppCompatActivity() {
                 finish()
             }
             .show()
-    }
-
-    private fun mostrarFragmentoPerfil(fragment: Fragment) {
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.profileFragmentContainer, fragment)
-            .commit()
-    }
-
-    private fun marcarTabActiva(esGuardadas: Boolean) {
-        btnTabGuardadas.isSelected = esGuardadas
-        btnTabMisRecetas.isSelected = !esGuardadas
     }
 
     private fun cargarDatosPerfil() {

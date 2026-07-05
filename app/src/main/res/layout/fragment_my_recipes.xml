@@ -2,24 +2,15 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:paddingTop="6dp">
-
-    <TextView
-        android:id="@+id/txtTituloMisRecetas"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Mis publicaciones"
-        android:textColor="@color/recipe_text_primary"
-        android:textSize="20sp"
-        android:textStyle="bold" />
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
     <TextView
         android:id="@+id/txtEmptyMyRecipes"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="24dp"
+        android:gravity="center"
         android:text="Todavía no has publicado recetas."
         android:textColor="@color/recipe_text_secondary"
         android:textSize="15sp"
@@ -28,10 +19,12 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerMyRecipes"
         android:layout_width="match_parent"
-        android:layout_height="220dp"
-        android:layout_marginTop="12dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="4dp"
+        android:layout_weight="1"
         android:clipToPadding="false"
         android:nestedScrollingEnabled="false"
+        android:paddingBottom="12dp"
         tools:listitem="@layout/item_profile_recipe" />
 
 </LinearLayout>

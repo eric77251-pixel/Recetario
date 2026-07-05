@@ -17,7 +17,7 @@ object ValidationUtils {
     fun contraseñaValida(contraseña: String): Boolean {
 
         val regex =
-            Regex("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&.:;,]).{8,}$")
+            Regex("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&.:;,]).{12,}$")
 
         return regex.matches(contraseña)
     }

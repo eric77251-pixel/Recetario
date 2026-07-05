@@ -13,18 +13,20 @@ import com.example.recetario.R
 import com.example.recetario.data.UserManager
 import com.example.recetario.fragments.HomeFragment
 import com.example.recetario.fragments.LoginFragment
+import com.example.recetario.fragments.RegisterFragment
 import com.example.recetario.fragments.RecipeDetailFragment
 import com.example.recetario.model.Recipe
 import com.example.recetario.utils.AuthManager
 import com.example.recetario.utils.NavigationHelper
 import com.example.recetario.utils.SessionManager
 import com.example.recetario.utils.SystemBarUtils
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.navigation.NavigationBarView
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var bottomNavigation: BottomNavigationView
+    // Usamos NavigationBarView para soportar tanto BottomNav como NavigationRail
+    private lateinit var navigationBar: NavigationBarView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,29 +34,50 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
 
-        bottomNavigation = findViewById(R.id.bottomNavigation)
-
+        // El ID es el mismo en ambos layouts (land y portrait)
+        navigationBar = findViewById(R.id.bottomNavigation)
         SystemBarUtils.aplicarInsets(findViewById(R.id.main))
 
-        configurarNavegacionInferior()
+        configurarNavegacion()
 
         if (savedInstanceState == null) {
             mostrarPantallaInicial()
+        } else {
+            actualizarInterfazSegunSesion()
         }
 
         manejarIntentRedireccion(intent)
     }
 
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        setIntent(intent)
-        manejarIntentRedireccion(intent)
+    private fun actualizarInterfazSegunSesion() {
+        val firebaseUser = AuthManager.obtenerUsuario()
+        val currentFragment = supportFragmentManager.findFragmentById(R.id.contenedorFragments)
+
+        if (firebaseUser == null) {
+            ocultarMenu()
+            if (currentFragment !is LoginFragment && currentFragment !is RegisterFragment) {
+                cambiarFragmento(LoginFragment(), agregarAlBackStack = false, mostrarMenu = false)
+            }
+        } else {
+            if (currentFragment is LoginFragment || currentFragment is RegisterFragment) {
+                ocultarMenu()
+            } else {
+                mostrarMenu()
+            }
+        }
     }
 
-    /**
-     * Decide si se muestra login o recetas según el usuario autenticado en Firebase.
-     * Esta validación restringe el acceso a la pantalla principal si no hay sesión activa.
-     */
+    private fun configurarNavegacion() {
+        navigationBar.setOnItemSelectedListener {
+            when (it.itemId) {
+                R.id.nav_recetas -> NavigationHelper.irRecetas(this)
+                R.id.nav_add -> NavigationHelper.irPublicacion(this)
+                R.id.nav_perfil -> NavigationHelper.irPerfil(this)
+                else -> false
+            }
+        }
+    }
+
     private fun mostrarPantallaInicial() {
         val firebaseUser = AuthManager.obtenerUsuario()
 
@@ -70,31 +93,20 @@ class MainActivity : AppCompatActivity() {
 
             if (usuario == null) {
                 AuthManager.cerrarSesion()
-                Toast.makeText(
-                    this@MainActivity,
-                    "Debe iniciar sesión nuevamente.",
-                    Toast.LENGTH_SHORT
-                ).show()
-
                 cambiarFragmento(LoginFragment(), agregarAlBackStack = false, mostrarMenu = false)
                 return@launch
             }
 
             SessionManager.usuario = usuario
             cambiarFragmento(HomeFragment(), agregarAlBackStack = false, mostrarMenu = true)
-            bottomNavigation.selectedItemId = R.id.nav_recetas
+            navigationBar.selectedItemId = R.id.nav_recetas
         }
     }
 
-    private fun configurarNavegacionInferior() {
-        bottomNavigation.setOnItemSelectedListener {
-            when (it.itemId) {
-                R.id.nav_recetas -> NavigationHelper.irRecetas(this)
-                R.id.nav_add -> NavigationHelper.irPublicacion(this)
-                R.id.nav_perfil -> NavigationHelper.irPerfil(this)
-                else -> false
-            }
-        }
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        manejarIntentRedireccion(intent)
     }
 
     private fun manejarIntentRedireccion(intent: Intent?) {
@@ -114,16 +126,15 @@ class MainActivity : AppCompatActivity() {
                         putParcelable("EXTRA_RECETA", it)
                     }
                 }
-
                 cambiarFragmento(fragment, agregarAlBackStack = true, mostrarMenu = true)
-                bottomNavigation.selectedItemId = R.id.nav_recetas
+                navigationBar.selectedItemId = R.id.nav_recetas
             }
             return
         }
 
         if (intent?.getStringExtra("FORZAR_FRAGMENTO") == "Recetas") {
             cambiarFragmento(HomeFragment(), agregarAlBackStack = false, mostrarMenu = true)
-            bottomNavigation.selectedItemId = R.id.nav_recetas
+            navigationBar.selectedItemId = R.id.nav_recetas
         }
     }
 
@@ -132,23 +143,20 @@ class MainActivity : AppCompatActivity() {
         agregarAlBackStack: Boolean = true,
         mostrarMenu: Boolean = true
     ) {
-        bottomNavigation.visibility = if (mostrarMenu) View.VISIBLE else View.GONE
+        (navigationBar as View).visibility = if (mostrarMenu) View.VISIBLE else View.GONE
 
         val transaccion = supportFragmentManager.beginTransaction()
             .replace(R.id.contenedorFragments, fragment)
 
-        if (agregarAlBackStack) {
-            transaccion.addToBackStack(null)
-        }
-
+        if (agregarAlBackStack) transaccion.addToBackStack(null)
         transaccion.commit()
     }
 
     fun mostrarMenu() {
-        bottomNavigation.visibility = View.VISIBLE
+        (navigationBar as View).visibility = View.VISIBLE
     }
 
     fun ocultarMenu() {
-        bottomNavigation.visibility = View.GONE
+        (navigationBar as View).visibility = View.GONE
     }
 }

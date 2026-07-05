@@ -109,7 +109,7 @@ class LoginFragment : Fragment() {
 
                 Toast.makeText(
                     requireContext(),
-                    mensaje ?: "Correo o contraseña incorrectos",
+                    "Correo o contraseña incorrectos",
                     Toast.LENGTH_LONG
                 ).show()
 

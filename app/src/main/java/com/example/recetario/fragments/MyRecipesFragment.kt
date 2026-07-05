@@ -1,5 +1,6 @@
 package com.example.recetario.fragments
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -45,19 +46,17 @@ class MyRecipesFragment : Fragment() {
             (activity as? ProfileActivity)?.abrirDetalle(recipe)
         }
 
-        recyclerMyRecipes.layoutManager = GridLayoutManager(requireContext(), 2)
+        // Adaptar columnas: 3 en horizontal, 2 en vertical
+        val columnas = if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) 3 else 2
+        recyclerMyRecipes.layoutManager = GridLayoutManager(requireContext(), columnas)
         recyclerMyRecipes.adapter = adapter
         recyclerMyRecipes.isNestedScrollingEnabled = false
 
         cargarMisRecetas()
     }
 
-    /**
-     * Obtiene las publicaciones creadas por el usuario autenticado.
-     */
     private fun cargarMisRecetas() {
         if (!NetworkUtils.hayConexion(requireContext())) {
-            Toast.makeText(requireContext(), "Sin conexión. No se pudieron cargar tus recetas.", Toast.LENGTH_LONG).show()
             return
         }
 

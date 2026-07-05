@@ -1,5 +1,6 @@
 package com.example.recetario.fragments
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -46,7 +47,9 @@ class SavedRecipesFragment : Fragment() {
             (activity as? ProfileActivity)?.abrirDetalle(recipe)
         }
 
-        recyclerSavedRecipes.layoutManager = GridLayoutManager(requireContext(), 2)
+        // Adaptar columnas: 3 en horizontal, 2 en vertical
+        val columnas = if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) 3 else 2
+        recyclerSavedRecipes.layoutManager = GridLayoutManager(requireContext(), columnas)
         recyclerSavedRecipes.adapter = adapter
         recyclerSavedRecipes.isNestedScrollingEnabled = false
 
@@ -58,7 +61,6 @@ class SavedRecipesFragment : Fragment() {
      */
     private fun cargarRecetasGuardadas() {
         if (!NetworkUtils.hayConexion(requireContext())) {
-            Toast.makeText(requireContext(), "Sin conexión. No se pudieron cargar las guardadas.", Toast.LENGTH_LONG).show()
             return
         }
 

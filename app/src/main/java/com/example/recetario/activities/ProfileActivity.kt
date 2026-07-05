@@ -27,13 +27,13 @@ import com.example.recetario.utils.NavigationHelper
 import com.example.recetario.utils.NetworkUtils
 import com.example.recetario.utils.SessionManager
 import com.example.recetario.utils.SystemBarUtils
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.navigation.NavigationBarView
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
 class ProfileActivity : AppCompatActivity() {
 
-    private lateinit var bottomNavigation: BottomNavigationView
+    private lateinit var navigationBar: NavigationBarView
     private lateinit var btnEditarPerfil: Button
     private lateinit var btnCerrarSesion: Button
 
@@ -53,6 +53,16 @@ class ProfileActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        if (AuthManager.obtenerUsuario() == null) {
+            val intent = Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            startActivity(intent)
+            finish()
+            return
+        }
+
         setContentView(R.layout.activity_profile)
         SystemBarUtils.aplicarInsets(findViewById(R.id.rootProfile))
 
@@ -69,7 +79,7 @@ class ProfileActivity : AppCompatActivity() {
         txtCorreoUsuario = findViewById(R.id.txtCorreoUsuario)
         txtCantidadRecetas = findViewById(R.id.txtCantidadRecetas)
         txtFavoritas = findViewById(R.id.txtFavoritas)
-        bottomNavigation = findViewById(R.id.bottomNavigation)
+        navigationBar = findViewById(R.id.bottomNavigation)
         btnEditarPerfil = findViewById(R.id.btnEditarPerfil)
         btnCerrarSesion = findViewById(R.id.btnCerrarSesion)
         tabGuardadas = findViewById(R.id.tabGuardadas)
@@ -82,9 +92,9 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun configurarNavegacion() {
-        bottomNavigation.selectedItemId = R.id.nav_perfil
+        navigationBar.selectedItemId = R.id.nav_perfil
 
-        bottomNavigation.setOnItemSelectedListener {
+        navigationBar.setOnItemSelectedListener {
             when (it.itemId) {
                 R.id.nav_recetas -> NavigationHelper.irRecetas(this)
                 R.id.nav_add -> NavigationHelper.irPublicacion(this)
@@ -116,11 +126,6 @@ class ProfileActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Usa ViewPager2 para permitir cambiar entre secciones del perfil
-     * con gestos horizontales, manteniendo una experiencia más similar
-     * a Instagram o X.
-     */
     private fun configurarSeccionesDeslizables() {
         viewPagerProfile.adapter = ProfileSectionsPagerAdapter(this)
         viewPagerProfile.offscreenPageLimit = 2
@@ -172,7 +177,6 @@ class ProfileActivity : AppCompatActivity() {
 
     private fun cargarDatosPerfil() {
         if (!NetworkUtils.hayConexion(this)) {
-            Toast.makeText(this, "Sin conexión. No se pudo cargar el perfil.", Toast.LENGTH_LONG).show()
             return
         }
 
@@ -192,7 +196,6 @@ class ProfileActivity : AppCompatActivity() {
 
         if (usuario.fotoPerfil.isNotBlank()) {
             imgFotoPerfil.load(urlSinCache(usuario.fotoPerfil)) {
-                // La foto de perfil puede cambiar usando el mismo usuario; se fuerza recarga real.
                 memoryCachePolicy(CachePolicy.DISABLED)
                 diskCachePolicy(CachePolicy.DISABLED)
             }

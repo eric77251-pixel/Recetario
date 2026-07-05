@@ -25,6 +25,7 @@ import com.example.recetario.R
 import com.example.recetario.utils.SystemBarUtils
 import com.example.recetario.utils.SquareCropImageView
 import com.example.recetario.data.UserManager
+import com.example.recetario.utils.AuthManager
 import com.example.recetario.utils.NetworkUtils
 import com.example.recetario.utils.PermissionManager
 import com.example.recetario.utils.SessionManager
@@ -47,21 +48,25 @@ class EditProfileActivity : AppCompatActivity() {
     private var fotoUriSeleccionada: Uri? = null
     private var fotoBitmapRecortada: Bitmap? = null
 
-    private val seleccionarFotoLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        if (uri != null) {
-            mostrarEditorRecorte(uri)
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Validación de seguridad al rotar o iniciar
+        if (AuthManager.obtenerUsuario() == null) {
+            val intent = Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            startActivity(intent)
+            finish()
+            return
+        }
+
         setContentView(R.layout.activity_edit_profile)
         SystemBarUtils.aplicarInsets(findViewById(R.id.rootEditProfile))
 
         inicializarVistas()
-        configurarBotonAtras()
+        cargarDatosActuales()
         configurarEventos()
-        cargarUsuario()
     }
 
     private fun inicializarVistas() {
@@ -73,210 +78,49 @@ class EditProfileActivity : AppCompatActivity() {
         btnIrCambiarContrasena = findViewById(R.id.btnIrCambiarContrasena)
     }
 
+    private fun cargarDatosActuales() {
+        val usuario = SessionManager.usuario ?: return
+        etEditarNombre.setText(usuario.nombre)
+        etEditarApellido.setText(usuario.apellido)
+        
+        if (usuario.fotoPerfil.isNotBlank()) {
+            imgFotoEditarPerfil.load(usuario.fotoPerfil) {
+                crossfade(true)
+                placeholder(android.R.drawable.sym_def_app_icon)
+            }
+        }
+    }
+
     private fun configurarEventos() {
-        txtCambiarFoto.setOnClickListener { solicitarGaleria() }
-        imgFotoEditarPerfil.setOnClickListener { solicitarGaleria() }
+        txtCambiarFoto.setOnClickListener {
+            if (permissionManager.permisosMultimedia(200)) {
+                seleccionarFotoLauncher.launch("image/*")
+            }
+        }
+
+        btnGuardarCambios.setOnClickListener {
+            validarYActualizar()
+        }
 
         btnIrCambiarContrasena.setOnClickListener {
             startActivity(Intent(this, ChangePasswordActivity::class.java))
         }
+    }
 
-        btnGuardarCambios.setOnClickListener {
-            validarYGuardar()
+    private val seleccionarFotoLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) {
+            fotoUriSeleccionada = uri
+            mostrarDialogoRecorte(uri)
         }
     }
 
-    private fun cargarUsuario() {
-        val usuario = SessionManager.usuario ?: return
-
-        etEditarNombre.setText(usuario.nombre)
-        etEditarApellido.setText(usuario.apellido)
-
-        if (usuario.fotoPerfil.isNotBlank()) {
-            imgFotoEditarPerfil.load(urlSinCache(usuario.fotoPerfil)) {
-                // Evita que Coil muestre una foto vieja guardada en caché.
-                memoryCachePolicy(CachePolicy.DISABLED)
-                diskCachePolicy(CachePolicy.DISABLED)
-            }
-        } else {
-            imgFotoEditarPerfil.setImageResource(android.R.drawable.sym_def_app_icon)
-        }
-    }
-
-    private fun configurarBotonAtras() {
-        onBackPressedDispatcher.addCallback(
-            this,
-            object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    volverAlPerfil()
-                }
-            }
-        )
-    }
-
-    private fun solicitarGaleria() {
-        if (permissionManager.permisosMultimedia(100)) {
-            abrirGaleria()
-        }
-    }
-
-    private fun abrirGaleria() {
-        seleccionarFotoLauncher.launch("image/*")
-    }
-
-    /**
-     * Valida nombre, apellido e imagen antes de actualizar Firebase y Supabase.
-     */
-    private fun validarYGuardar() {
-        val nombre = etEditarNombre.text.toString().trim()
-        val apellido = etEditarApellido.text.toString().trim()
-
-        if (ValidationUtils.campoVacio(nombre)) {
-            etEditarNombre.error = "Ingrese su nombre"
-            etEditarNombre.requestFocus()
-            return
-        }
-
-        if (ValidationUtils.campoVacio(apellido)) {
-            etEditarApellido.error = "Ingrese su apellido"
-            etEditarApellido.requestFocus()
-            return
-        }
-
-        if (!NetworkUtils.hayConexion(this)) {
-            Toast.makeText(this, "Sin conexión. Intente nuevamente.", Toast.LENGTH_LONG).show()
-            return
-        }
-
-        btnGuardarCambios.isEnabled = false
-
-        lifecycleScope.launch {
-            try {
-                val usuarioActual = SessionManager.usuario ?: return@launch
-                var urlFoto = usuarioActual.fotoPerfil
-
-                if (fotoBitmapRecortada != null) {
-                    val bytes = convertirBitmapABytes(fotoBitmapRecortada!!)
-
-                    val nuevaUrl = UserManager.subirFotoPerfil(
-                        // Nombre único para que la URL cambie y la app no reutilice la imagen anterior.
-                        nombreArchivo = "perfil_${usuarioActual.id}_${System.currentTimeMillis()}.jpg",
-                        bytesImagen = bytes
-                    )
-
-                    if (nuevaUrl == null) {
-                        mostrarMensaje("No se pudo subir la foto de perfil.")
-                        return@launch
-                    }
-
-                    urlFoto = nuevaUrl
-                }
-
-                val usuarioActualizado = usuarioActual.copy(
-                    nombre = nombre,
-                    apellido = apellido,
-                    fotoPerfil = urlFoto
-                )
-
-                val actualizado = UserManager.actualizarUsuario(usuarioActualizado)
-
-                if (actualizado) {
-                    SessionManager.usuario = usuarioActualizado
-                    mostrarMensaje("Perfil actualizado correctamente.")
-                    volverAlPerfil()
-                } else {
-                    mostrarMensaje("No fue posible actualizar el perfil.")
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                mostrarMensaje("Ocurrió un error al actualizar el perfil.")
-            } finally {
-                btnGuardarCambios.isEnabled = true
-            }
-        }
-    }
-
-    private fun mostrarEditorRecorte(uri: Uri) {
-        val bitmapOriginal = cargarBitmapDesdeUri(uri)
-
-        if (bitmapOriginal == null) {
-            mostrarMensaje("No se pudo abrir la foto seleccionada.")
-            return
-        }
-
-        val bitmapParaRecorte = ajustarImagen(bitmapOriginal, 1600)
-        val cropView = SquareCropImageView(this).apply {
-            setImageBitmapForCrop(bitmapParaRecorte)
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(390)
-            ).apply {
-                topMargin = dp(12)
-            }
-        }
-
-        val contenedor = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(18), dp(18), dp(18), dp(12))
-
-            addView(TextView(this@EditProfileActivity).apply {
-                text = "Recortar foto 1:1"
-                textSize = 20f
-                setTextColor(getColorCompat(R.color.recipe_text_primary))
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-            })
-
-            addView(TextView(this@EditProfileActivity).apply {
-                text = "Mueve la imagen y usa dos dedos para hacer zoom. Solo se subirá el área cuadrada."
-                textSize = 14f
-                setTextColor(getColorCompat(R.color.recipe_text_secondary))
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    topMargin = dp(6)
-                }
-            })
-
-            addView(cropView)
-        }
-
-        val dialog = AlertDialog.Builder(this)
-            .setView(contenedor)
-            .setNegativeButton("Cancelar", null)
-            .setPositiveButton("Usar foto", null)
-            .create()
-
-        dialog.setOnShowListener {
-            dialog.window?.setLayout(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val fotoRecortada = cropView.obtenerBitmapRecortado(900)
-
-                if (fotoRecortada == null) {
-                    mostrarMensaje("No se pudo recortar la foto.")
-                    return@setOnClickListener
-                }
-
-                fotoUriSeleccionada = uri
-                fotoBitmapRecortada = fotoRecortada
-                imgFotoEditarPerfil.setImageBitmap(fotoRecortada)
-                mostrarMensaje("Foto recortada en formato 1:1.")
-                dialog.dismiss()
-            }
-        }
-
-        dialog.show()
-    }
-
-    private fun cargarBitmapDesdeUri(uri: Uri): Bitmap? {
-        return try {
+    private fun mostrarDialogoRecorte(uri: Uri) {
+        // 1. Cargar el Bitmap desde la Uri correctamente
+        val bitmapOriginal = try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 val source = ImageDecoder.createSource(contentResolver, uri)
                 ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
+                    // Forzar asignador de software para que el Canvas pueda dibujar el bitmap en el Custom View
                     decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
                 }
             } else {
@@ -287,73 +131,83 @@ class EditProfileActivity : AppCompatActivity() {
             e.printStackTrace()
             null
         }
-    }
 
-    private fun convertirBitmapABytes(bitmap: Bitmap): ByteArray {
-        val bitmapAjustado = Bitmap.createScaledBitmap(bitmap, 900, 900, true)
-        return ByteArrayOutputStream().use { stream ->
-            bitmapAjustado.compress(Bitmap.CompressFormat.JPEG, 88, stream)
-            stream.toByteArray()
+        if (bitmapOriginal == null) {
+            Toast.makeText(this, "Error al cargar la imagen", Toast.LENGTH_SHORT).show()
+            return
         }
+
+        // 2. Usar los métodos reales de tu clase SquareCropImageView
+        val cropImageView = SquareCropImageView(this)
+        cropImageView.setImageBitmapForCrop(bitmapOriginal)
+
+        AlertDialog.Builder(this)
+            .setTitle("Recortar foto (1:1)")
+            .setView(cropImageView)
+            .setPositiveButton("Recortar") { _, _ ->
+                // 3. Usar el método real obtenerBitmapRecortado() de SquareCropImageView
+                val bitmapResult = cropImageView.obtenerBitmapRecortado()
+                if (bitmapResult != null) {
+                    fotoBitmapRecortada = bitmapResult
+                    imgFotoEditarPerfil.setImageBitmap(bitmapResult)
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
-    private fun ajustarImagen(bitmap: Bitmap, maxSize: Int): Bitmap {
-        val ratio = min(
-            maxSize.toFloat() / bitmap.width,
-            maxSize.toFloat() / bitmap.height
-        ).coerceAtMost(1f)
+    private fun validarYActualizar() {
+        val nombre = etEditarNombre.text.toString().trim()
+        val apellido = etEditarApellido.text.toString().trim()
 
-        val nuevoAncho = (bitmap.width * ratio).toInt().coerceAtLeast(1)
-        val nuevoAlto = (bitmap.height * ratio).toInt().coerceAtLeast(1)
-
-        return Bitmap.createScaledBitmap(bitmap, nuevoAncho, nuevoAlto, true)
-    }
-
-    private fun urlSinCache(url: String): String {
-        val separador = if (url.contains("?")) "&" else "?"
-        return "$url${separador}v=${System.currentTimeMillis()}"
-    }
-
-    private fun dp(value: Int): Int {
-        return (value * resources.displayMetrics.density).toInt()
-    }
-
-    private fun getColorCompat(colorRes: Int): Int {
-        return androidx.core.content.ContextCompat.getColor(this, colorRes)
-    }
-
-    private fun volverAlPerfil() {
-        val intent = Intent(this, ProfileActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        if (nombre.isEmpty()) {
+            etEditarNombre.error = "Ingrese su nombre"
+            return
         }
-        startActivity(intent)
-        finish()
-    }
 
-    private fun mostrarMensaje(mensaje: String) {
-        Toast.makeText(this, mensaje, Toast.LENGTH_SHORT).show()
-    }
+        if (!NetworkUtils.hayConexion(this)) {
+            Toast.makeText(this, "Sin conexión", Toast.LENGTH_SHORT).show()
+            return
+        }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        btnGuardarPostState(false)
 
-        if (requestCode == 100) {
-            val concedidos = grantResults.isNotEmpty() &&
-                    grantResults.all { it == PackageManager.PERMISSION_GRANTED }
+        lifecycleScope.launch {
+            try {
+                var urlFoto = SessionManager.usuario?.fotoPerfil ?: ""
 
-            if (concedidos) {
-                abrirGaleria()
-            } else {
-                Toast.makeText(
-                    this,
-                    "El permiso de imágenes es necesario para cambiar la foto.",
-                    Toast.LENGTH_LONG
-                ).show()
+                fotoBitmapRecortada?.let { bitmap ->
+                    val stream = ByteArrayOutputStream()
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream)
+                    val bytes = stream.toByteArray()
+                    val nombreArchivo = "perfil_${AuthManager.obtenerUsuario()?.uid}.jpg"
+                    val nuevaUrl = UserManager.subirFotoPerfil(nombreArchivo, bytes)
+                    if (nuevaUrl != null) urlFoto = nuevaUrl
+                }
+
+                val usuarioActualizado = SessionManager.usuario?.copy(
+                    nombre = nombre,
+                    apellido = apellido,
+                    fotoPerfil = urlFoto
+                )
+
+                if (usuarioActualizado != null && UserManager.actualizarUsuario(usuarioActualizado)) {
+                    SessionManager.usuario = usuarioActualizado
+                    Toast.makeText(this@EditProfileActivity, "Perfil actualizado", Toast.LENGTH_SHORT).show()
+                    finish()
+                } else {
+                    Toast.makeText(this@EditProfileActivity, "Error al guardar", Toast.LENGTH_SHORT).show()
+                    btnGuardarPostState(true)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                btnGuardarPostState(true)
             }
         }
+    }
+
+    private fun btnGuardarPostState(enabled: Boolean) {
+        btnGuardarCambios.isEnabled = enabled
+        btnGuardarCambios.text = if (enabled) "Guardar cambios" else "Actualizando..."
     }
 }

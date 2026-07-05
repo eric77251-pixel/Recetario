@@ -75,7 +75,7 @@ object UserManager {
             val bucket = SupabaseClientProvider.client.storage.from("image")
 
             bucket.upload(
-                path = nombreArchivo,
+                path ="perfil/$nombreArchivo",
                 data = bytesImagen
             ) {
                 upsert = true

@@ -1,6 +1,7 @@
 package com.example.recetario.fragments
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -14,9 +15,11 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.recetario.R
 import com.example.recetario.activities.CreateRecipeActivity
+import com.example.recetario.activities.MainActivity
 import com.example.recetario.adapter.RecipeAdapter
 import com.example.recetario.data.RecipeManager
 import com.example.recetario.model.Recipe
+import com.example.recetario.utils.AuthManager
 import com.example.recetario.utils.NetworkUtils
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.launch
@@ -42,12 +45,22 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Verificación de seguridad básica al cargar
+        if (AuthManager.obtenerUsuario() == null) {
+            (requireActivity() as MainActivity).ocultarMenu()
+            (requireActivity() as MainActivity).cambiarFragmento(LoginFragment(), false, false)
+            return
+        }
+
         recyclerView = view.findViewById(R.id.recyclerReceta)
         searchView = view.findViewById(R.id.txtBuscarReceta)
         txtEstadoRecetas = view.findViewById(R.id.txtEstadoRecetas)
         val agregarReceta = view.findViewById<FloatingActionButton>(R.id.AgregarReceta)
 
-        recyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
+        // Adaptar columnas según orientación
+        val orientacion = resources.configuration.orientation
+        val columnas = if (orientacion == Configuration.ORIENTATION_LANDSCAPE) 3 else 2
+        recyclerView.layoutManager = GridLayoutManager(requireContext(), columnas)
 
         adapter = RecipeAdapter(listaRecetas) { receta ->
             abrirDetalle(receta)
@@ -70,15 +83,11 @@ class HomeFragment : Fragment() {
         agregarReceta.setOnClickListener {
             startActivity(Intent(requireContext(), CreateRecipeActivity::class.java))
         }
-
     }
 
-    /**
-     * Carga las recetas desde Firebase y actualiza el RecyclerView.
-     */
     private fun cargarRecetas() {
         if (!NetworkUtils.hayConexion(requireContext())) {
-            mostrarEstado("Sin conexión. Revisa tu internet para cargar recetas.")
+            mostrarEstado("Sin conexión. Revisa tu internet.")
             return
         }
 
@@ -133,7 +142,7 @@ class HomeFragment : Fragment() {
         adapter.notifyDataSetChanged()
 
         if (listaRecetas.isEmpty()) {
-            mostrarEstado("No encontramos recetas con esa búsqueda.")
+            mostrarEstado("No encontramos resultados.")
         } else {
             ocultarEstado()
         }
@@ -142,9 +151,6 @@ class HomeFragment : Fragment() {
     private fun mostrarEstado(mensaje: String) {
         txtEstadoRecetas.text = mensaje
         txtEstadoRecetas.visibility = View.VISIBLE
-        if (mensaje.startsWith("Sin conexión")) {
-            Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show()
-        }
     }
 
     private fun ocultarEstado() {

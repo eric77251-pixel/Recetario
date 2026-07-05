@@ -96,15 +96,16 @@ object RecipeManager {
         return try {
 
             val bucket = SupabaseClientProvider.client.storage.from("image")
+            val path = "receta/$nombreArchivo"
 
             bucket.upload(
-                path = nombreArchivo,
+                path = path,
                 data = bytesImagen
             ) {
                 upsert = true
             }
 
-            bucket.publicUrl(nombreArchivo)
+            bucket.publicUrl(path)
 
         } catch (e: Exception) {
             e.printStackTrace()

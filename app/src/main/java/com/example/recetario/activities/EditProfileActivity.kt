@@ -5,6 +5,8 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
+import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
@@ -14,11 +16,14 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import coil.load
+import coil.request.CachePolicy
 import com.example.recetario.R
 import com.example.recetario.utils.SystemBarUtils
+import com.example.recetario.utils.SquareCropImageView
 import com.example.recetario.data.UserManager
 import com.example.recetario.utils.NetworkUtils
 import com.example.recetario.utils.PermissionManager
@@ -40,11 +45,11 @@ class EditProfileActivity : AppCompatActivity() {
 
     private val permissionManager = PermissionManager(this)
     private var fotoUriSeleccionada: Uri? = null
+    private var fotoBitmapRecortada: Bitmap? = null
 
     private val seleccionarFotoLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
-            fotoUriSeleccionada = uri
-            imgFotoEditarPerfil.load(uri)
+            mostrarEditorRecorte(uri)
         }
     }
 
@@ -88,7 +93,11 @@ class EditProfileActivity : AppCompatActivity() {
         etEditarApellido.setText(usuario.apellido)
 
         if (usuario.fotoPerfil.isNotBlank()) {
-            imgFotoEditarPerfil.load(usuario.fotoPerfil)
+            imgFotoEditarPerfil.load(urlSinCache(usuario.fotoPerfil)) {
+                // Evita que Coil muestre una foto vieja guardada en caché.
+                memoryCachePolicy(CachePolicy.DISABLED)
+                diskCachePolicy(CachePolicy.DISABLED)
+            }
         } else {
             imgFotoEditarPerfil.setImageResource(android.R.drawable.sym_def_app_icon)
         }
@@ -146,16 +155,12 @@ class EditProfileActivity : AppCompatActivity() {
                 val usuarioActual = SessionManager.usuario ?: return@launch
                 var urlFoto = usuarioActual.fotoPerfil
 
-                if (fotoUriSeleccionada != null) {
-                    val bytes = convertirImagenABytes(fotoUriSeleccionada!!)
-
-                    if (bytes == null) {
-                        mostrarMensaje("No se pudo procesar la foto seleccionada.")
-                        return@launch
-                    }
+                if (fotoBitmapRecortada != null) {
+                    val bytes = convertirBitmapABytes(fotoBitmapRecortada!!)
 
                     val nuevaUrl = UserManager.subirFotoPerfil(
-                        nombreArchivo = "perfil_${usuarioActual.id}.jpg",
+                        // Nombre único para que la URL cambie y la app no reutilice la imagen anterior.
+                        nombreArchivo = "perfil_${usuarioActual.id}_${System.currentTimeMillis()}.jpg",
                         bytesImagen = bytes
                     )
 
@@ -191,24 +196,104 @@ class EditProfileActivity : AppCompatActivity() {
         }
     }
 
-    private fun convertirImagenABytes(uri: Uri): ByteArray? {
+    private fun mostrarEditorRecorte(uri: Uri) {
+        val bitmapOriginal = cargarBitmapDesdeUri(uri)
+
+        if (bitmapOriginal == null) {
+            mostrarMensaje("No se pudo abrir la foto seleccionada.")
+            return
+        }
+
+        val bitmapParaRecorte = ajustarImagen(bitmapOriginal, 1600)
+        val cropView = SquareCropImageView(this).apply {
+            setImageBitmapForCrop(bitmapParaRecorte)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(390)
+            ).apply {
+                topMargin = dp(12)
+            }
+        }
+
+        val contenedor = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(18), dp(18), dp(18), dp(12))
+
+            addView(TextView(this@EditProfileActivity).apply {
+                text = "Recortar foto 1:1"
+                textSize = 20f
+                setTextColor(getColorCompat(R.color.recipe_text_primary))
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+            })
+
+            addView(TextView(this@EditProfileActivity).apply {
+                text = "Mueve la imagen y usa dos dedos para hacer zoom. Solo se subirá el área cuadrada."
+                textSize = 14f
+                setTextColor(getColorCompat(R.color.recipe_text_secondary))
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    topMargin = dp(6)
+                }
+            })
+
+            addView(cropView)
+        }
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(contenedor)
+            .setNegativeButton("Cancelar", null)
+            .setPositiveButton("Usar foto", null)
+            .create()
+
+        dialog.setOnShowListener {
+            dialog.window?.setLayout(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val fotoRecortada = cropView.obtenerBitmapRecortado(900)
+
+                if (fotoRecortada == null) {
+                    mostrarMensaje("No se pudo recortar la foto.")
+                    return@setOnClickListener
+                }
+
+                fotoUriSeleccionada = uri
+                fotoBitmapRecortada = fotoRecortada
+                imgFotoEditarPerfil.setImageBitmap(fotoRecortada)
+                mostrarMensaje("Foto recortada en formato 1:1.")
+                dialog.dismiss()
+            }
+        }
+
+        dialog.show()
+    }
+
+    private fun cargarBitmapDesdeUri(uri: Uri): Bitmap? {
         return try {
-            val bitmapOriginal = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 val source = ImageDecoder.createSource(contentResolver, uri)
-                ImageDecoder.decodeBitmap(source)
+                ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
+                    decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+                }
             } else {
                 @Suppress("DEPRECATION")
                 MediaStore.Images.Media.getBitmap(contentResolver, uri)
             }
-
-            val bitmapAjustado = ajustarImagen(bitmapOriginal, 900)
-            ByteArrayOutputStream().use { stream ->
-                bitmapAjustado.compress(Bitmap.CompressFormat.JPEG, 85, stream)
-                stream.toByteArray()
-            }
         } catch (e: Exception) {
             e.printStackTrace()
             null
+        }
+    }
+
+    private fun convertirBitmapABytes(bitmap: Bitmap): ByteArray {
+        val bitmapAjustado = Bitmap.createScaledBitmap(bitmap, 900, 900, true)
+        return ByteArrayOutputStream().use { stream ->
+            bitmapAjustado.compress(Bitmap.CompressFormat.JPEG, 88, stream)
+            stream.toByteArray()
         }
     }
 
@@ -218,10 +303,23 @@ class EditProfileActivity : AppCompatActivity() {
             maxSize.toFloat() / bitmap.height
         ).coerceAtMost(1f)
 
-        val nuevoAncho = (bitmap.width * ratio).toInt()
-        val nuevoAlto = (bitmap.height * ratio).toInt()
+        val nuevoAncho = (bitmap.width * ratio).toInt().coerceAtLeast(1)
+        val nuevoAlto = (bitmap.height * ratio).toInt().coerceAtLeast(1)
 
         return Bitmap.createScaledBitmap(bitmap, nuevoAncho, nuevoAlto, true)
+    }
+
+    private fun urlSinCache(url: String): String {
+        val separador = if (url.contains("?")) "&" else "?"
+        return "$url${separador}v=${System.currentTimeMillis()}"
+    }
+
+    private fun dp(value: Int): Int {
+        return (value * resources.displayMetrics.density).toInt()
+    }
+
+    private fun getColorCompat(colorRes: Int): Int {
+        return androidx.core.content.ContextCompat.getColor(this, colorRes)
     }
 
     private fun volverAlPerfil() {

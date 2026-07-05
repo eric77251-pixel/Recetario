@@ -62,7 +62,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="Actualiza tus datos y tu foto de usuario."
+                    android:text="Actualiza tus datos y recorta tu foto en formato 1:1 antes de subirla."
                     android:textColor="@color/banner_text_secondary"
                     android:textSize="14sp" />
             </LinearLayout>
@@ -103,10 +103,17 @@
                     android:focusable="true"
                     android:foreground="?attr/selectableItemBackground"
                     android:padding="8dp"
-                    android:text="Cambiar foto"
+                    android:text="Cambiar foto y recortar"
                     android:textColor="@color/recipe_primary"
                     android:textSize="15sp"
                     android:textStyle="bold" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="La imagen se previsualiza y se sube como cuadrado 1:1."
+                    android:textColor="@color/recipe_text_secondary"
+                    android:textSize="13sp" />
             </LinearLayout>
 
             <LinearLayout

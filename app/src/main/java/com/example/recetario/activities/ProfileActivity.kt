@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import coil.load
+import coil.request.CachePolicy
 import com.example.recetario.R
 import com.example.recetario.adapter.ProfileSectionsPagerAdapter
 import com.example.recetario.data.RecipeManager
@@ -190,7 +191,11 @@ class ProfileActivity : AppCompatActivity() {
         txtCorreoUsuario.text = usuario.correo
 
         if (usuario.fotoPerfil.isNotBlank()) {
-            imgFotoPerfil.load(usuario.fotoPerfil)
+            imgFotoPerfil.load(urlSinCache(usuario.fotoPerfil)) {
+                // La foto de perfil puede cambiar usando el mismo usuario; se fuerza recarga real.
+                memoryCachePolicy(CachePolicy.DISABLED)
+                diskCachePolicy(CachePolicy.DISABLED)
+            }
         } else {
             imgFotoPerfil.setImageResource(android.R.drawable.sym_def_app_icon)
         }
@@ -203,6 +208,11 @@ class ProfileActivity : AppCompatActivity() {
 
         actualizarCantidadPublicadas(recetasPublicadas.size)
         actualizarCantidadGuardadas(recetasGuardadas.size)
+    }
+
+    private fun urlSinCache(url: String): String {
+        val separador = if (url.contains("?")) "&" else "?"
+        return "$url${separador}v=${System.currentTimeMillis()}"
     }
 
     fun actualizarCantidadGuardadas(cantidad: Int) {

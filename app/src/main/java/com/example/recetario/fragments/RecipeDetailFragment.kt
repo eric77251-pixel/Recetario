@@ -45,6 +45,7 @@ class RecipeDetailFragment : Fragment() {
     private lateinit var btnVolverDetalle: MaterialButton
     private lateinit var layoutZoom: FrameLayout
     private lateinit var imgZoom: ImageView
+    private lateinit var btnCerrarZoom: MaterialButton
 
     private var esFavorito = false
     private var recetaActual: Recipe? = null
@@ -68,6 +69,7 @@ class RecipeDetailFragment : Fragment() {
         btnEliminarReceta = view.findViewById(R.id.btnEliminarReceta)
         layoutZoom = view.findViewById(R.id.layoutZoom)
         imgZoom = view.findViewById(R.id.imgZoom)
+        btnCerrarZoom = view.findViewById(R.id.btnCerrarZoom)
 
         return view
     }
@@ -174,11 +176,10 @@ class RecipeDetailFragment : Fragment() {
 
         imgReceta.setOnClickListener {
             layoutZoom.visibility = View.VISIBLE
-            imgZoom.scaleType = ImageView.ScaleType.FIT_CENTER
             imgZoom.setOnTouchListener(ZoomListener(requireContext()))
         }
 
-        layoutZoom.setOnClickListener {
+        btnCerrarZoom.setOnClickListener {
             cerrarZoom()
         }
     }

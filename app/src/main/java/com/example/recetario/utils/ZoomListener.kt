@@ -3,111 +3,214 @@ package com.example.recetario.utils
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Matrix
-import android.graphics.PointF
+import android.graphics.RectF
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.View
 import android.widget.ImageView
-import kotlin.math.sqrt
+import kotlin.math.min
 
-class ZoomListener(context: Context) : View.OnTouchListener {
+/**
+ * Controla el zoom de una imagen sin usar librerías externas.
+ *
+ * Permite:
+ * - doble toque para acercar/restaurar;
+ * - gesto de pinza para acercar o alejar;
+ * - arrastre cuando la imagen está ampliada;
+ * - límites de escala y desplazamiento para evitar que la imagen se pierda fuera de pantalla.
+ */
+class ZoomListener(
+    context: Context,
+    private val escalaMaxima: Float = 4f
+) : View.OnTouchListener {
 
-    private val matrix = Matrix()
-    private val matrixGuardada = Matrix()
+    private val matrizBase = Matrix()
+    private val matrizUsuario = Matrix()
+    private val matrizFinal = Matrix()
+    private val valores = FloatArray(9)
 
-    // Estados del gesto táctil
-    private val NONE = 0
-    private val DRAG = 1
-    private val ZOOM = 2
-    private var modo = NONE
+    private var inicializado = false
+    private var ultimoX = 0f
+    private var ultimoY = 0f
+    private var arrastrando = false
 
-    private val puntoInicio = PointF()
-    private val puntoMedio = PointF()
-    private var distanciaInicialDedo = 1f
-    private var escalaActual = 1f
-    private val escalaMax = 4f
-    private val escalaMin = 1f
+    private val detectorEscala = ScaleGestureDetector(
+        context,
+        object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+            override fun onScale(detector: ScaleGestureDetector): Boolean {
+                val escalaActual = obtenerEscalaActual()
+                var factor = detector.scaleFactor
 
-    // 1. Detector del Gesto de Pinza (Pinch Zoom)
-    private val detectorEscala = ScaleGestureDetector(context, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
-        override fun onScale(detector: ScaleGestureDetector): Boolean {
-            val factorEscala = detector.scaleFactor
-            val nuevaEscala = escalaActual * factorEscala
+                val escalaNueva = escalaActual * factor
+                if (escalaNueva < ESCALA_MINIMA) {
+                    factor = ESCALA_MINIMA / escalaActual
+                } else if (escalaNueva > escalaMaxima) {
+                    factor = escalaMaxima / escalaActual
+                }
 
-            if (nuevaEscala in escalaMin..escalaMax) {
-                escalaActual = nuevaEscala
-                matrix.postScale(factorEscala, factorEscala, detector.focusX, detector.focusY)
+                matrizUsuario.postScale(factor, factor, detector.focusX, detector.focusY)
+                corregirLimites()
+                aplicarMatriz()
+                return true
             }
-            return true
         }
-    })
+    )
 
-    // 2. Detector del Doble Click (Double Tap)
-    private val detectorGestosEspeciales = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
-        override fun onDoubleTap(e: MotionEvent): Boolean {
-            if (escalaActual > 1f) {
-                matrix.reset()
-                escalaActual = 1f
-                modo = NONE
-            } else {
-                matrix.postScale(2f, 2f, e.x, e.y)
-                escalaActual = 2f
-                modo = DRAG
+    private val detectorGestos = GestureDetector(
+        context,
+        object : GestureDetector.SimpleOnGestureListener() {
+            override fun onDoubleTap(event: MotionEvent): Boolean {
+                if (obtenerEscalaActual() > 1.05f) {
+                    restaurarImagen()
+                } else {
+                    matrizUsuario.postScale(2f, 2f, event.x, event.y)
+                    corregirLimites()
+                    aplicarMatriz()
+                }
+                return true
             }
-            return true
         }
-    })
+    )
 
     @SuppressLint("ClickableViewAccessibility")
-    override fun onTouch(v: View?, event: MotionEvent?): Boolean {
-        val imageView = v as? ImageView ?: return false
-        imageView.scaleType = ImageView.ScaleType.MATRIX
+    override fun onTouch(view: View?, event: MotionEvent?): Boolean {
+        val imageView = view as? ImageView ?: return false
+        val motionEvent = event ?: return false
 
-        event?.let {
-            detectorGestosEspeciales.onTouchEvent(it)
-            detectorEscala.onTouchEvent(it)
+        if (!inicializado) {
+            inicializarMatriz(imageView)
+        }
 
-            val puntoActual = PointF(it.x, it.y)
+        detectorGestos.onTouchEvent(motionEvent)
+        detectorEscala.onTouchEvent(motionEvent)
 
-            when (it.action and MotionEvent.ACTION_MASK) {
-                MotionEvent.ACTION_DOWN -> {
-                    matrixGuardada.set(matrix)
-                    puntoInicio.set(it.x, it.y)
-                    if (escalaActual > 1f) modo = DRAG
-                }
-                MotionEvent.ACTION_POINTER_DOWN -> {
-                    distanciaInicialDedo = calcularDistanciaEntreDedos(it)
-                    if (distanciaInicialDedo > 10f) {
-                        matrixGuardada.set(matrix)
-                        calcularPuntoMedio(puntoMedio, it)
-                        modo = ZOOM
-                    }
-                }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
-                    modo = NONE
-                }
-                MotionEvent.ACTION_MOVE -> {
-                    if (modo == DRAG && escalaActual > 1f) {
-                        matrix.set(matrixGuardada)
-                        matrix.postTranslate(puntoActual.x - puntoInicio.x, puntoActual.y - puntoInicio.y)
-                    }
+        when (motionEvent.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                ultimoX = motionEvent.x
+                ultimoY = motionEvent.y
+                arrastrando = obtenerEscalaActual() > 1.05f
+                view.parent?.requestDisallowInterceptTouchEvent(true)
+            }
+
+            MotionEvent.ACTION_MOVE -> {
+                if (arrastrando && !detectorEscala.isInProgress && motionEvent.pointerCount == 1) {
+                    val dx = motionEvent.x - ultimoX
+                    val dy = motionEvent.y - ultimoY
+
+                    matrizUsuario.postTranslate(dx, dy)
+                    corregirLimites()
+                    aplicarMatriz()
+
+                    ultimoX = motionEvent.x
+                    ultimoY = motionEvent.y
                 }
             }
-            imageView.imageMatrix = matrix
+
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                arrastrando = false
+                view.parent?.requestDisallowInterceptTouchEvent(false)
+            }
         }
+
         return true
     }
 
-    private fun calcularDistanciaEntreDedos(event: MotionEvent): Float {
-        val x = event.getX(0) - event.getX(1)
-        val y = event.getY(0) - event.getY(1)
-        return sqrt((x * x + y * y).toDouble()).toFloat()
+    private lateinit var imageView: ImageView
+
+    private fun inicializarMatriz(imageView: ImageView) {
+        this.imageView = imageView
+        imageView.scaleType = ImageView.ScaleType.MATRIX
+
+        val drawable = imageView.drawable ?: return
+        val anchoVista = imageView.width.toFloat()
+        val altoVista = imageView.height.toFloat()
+        val anchoImagen = drawable.intrinsicWidth.toFloat()
+        val altoImagen = drawable.intrinsicHeight.toFloat()
+
+        if (anchoVista <= 0f || altoVista <= 0f || anchoImagen <= 0f || altoImagen <= 0f) return
+
+        matrizBase.reset()
+        matrizUsuario.reset()
+
+        val escala = min(anchoVista / anchoImagen, altoVista / altoImagen)
+        val dx = (anchoVista - anchoImagen * escala) / 2f
+        val dy = (altoVista - altoImagen * escala) / 2f
+
+        matrizBase.postScale(escala, escala)
+        matrizBase.postTranslate(dx, dy)
+
+        inicializado = true
+        aplicarMatriz()
     }
 
-    private fun calcularPuntoMedio(point: PointF, event: MotionEvent) {
-        val x = event.getX(0) + event.getX(1)
-        val y = event.getY(0) + event.getY(1)
-        point.set(x / 2, y / 2)
+    private fun aplicarMatriz() {
+        if (!::imageView.isInitialized) return
+        matrizFinal.set(matrizBase)
+        matrizFinal.postConcat(matrizUsuario)
+        imageView.imageMatrix = matrizFinal
+    }
+
+    private fun restaurarImagen() {
+        matrizUsuario.reset()
+        aplicarMatriz()
+    }
+
+    private fun obtenerEscalaActual(): Float {
+        matrizUsuario.getValues(valores)
+        val escala = valores[Matrix.MSCALE_X]
+        return if (escala == 0f) 1f else escala
+    }
+
+    private fun obtenerRectanguloImagen(): RectF? {
+        if (!::imageView.isInitialized) return null
+        val drawable = imageView.drawable ?: return null
+        val rect = RectF(
+            0f,
+            0f,
+            drawable.intrinsicWidth.toFloat(),
+            drawable.intrinsicHeight.toFloat()
+        )
+
+        matrizFinal.set(matrizBase)
+        matrizFinal.postConcat(matrizUsuario)
+        matrizFinal.mapRect(rect)
+        return rect
+    }
+
+    private fun corregirLimites() {
+        if (!::imageView.isInitialized) return
+        val rect = obtenerRectanguloImagen() ?: return
+        val anchoVista = imageView.width.toFloat()
+        val altoVista = imageView.height.toFloat()
+
+        var dx = 0f
+        var dy = 0f
+
+        dx = if (rect.width() <= anchoVista) {
+            anchoVista / 2f - rect.centerX()
+        } else {
+            when {
+                rect.left > 0f -> -rect.left
+                rect.right < anchoVista -> anchoVista - rect.right
+                else -> 0f
+            }
+        }
+
+        dy = if (rect.height() <= altoVista) {
+            altoVista / 2f - rect.centerY()
+        } else {
+            when {
+                rect.top > 0f -> -rect.top
+                rect.bottom < altoVista -> altoVista - rect.bottom
+                else -> 0f
+            }
+        }
+
+        matrizUsuario.postTranslate(dx, dy)
+    }
+
+    private companion object {
+        const val ESCALA_MINIMA = 1f
     }
 }

@@ -1,35 +1,40 @@
 package com.example.recetario.fragments
 
 import android.app.AlertDialog
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.fragment.app.Fragment
-import android.widget.FrameLayout
-import androidx.lifecycle.lifecycleScope
-import com.example.recetario.utils.ZoomListener
-import com.example.recetario.data.IngredientManager
-import com.example.recetario.data.StepManager
-import com.example.recetario.data.UserManager
-import com.example.recetario.data.RecipeManager
-import com.example.recetario.model.Recipe
-import com.example.recetario.R
-import kotlinx.coroutines.launch
-import android.os.Build
-import coil.load
-import com.example.recetario.data.SavedRecipeManager
-import com.example.recetario.model.SavedRecipe
-import com.google.android.material.button.MaterialButton
-import com.google.firebase.auth.FirebaseAuth
 import android.widget.Toast
 import androidx.activity.addCallback
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import coil.load
+import com.example.recetario.R
+import com.example.recetario.activities.CreateRecipeActivity
 import com.example.recetario.activities.MainActivity
+import com.example.recetario.data.IngredientManager
+import com.example.recetario.data.RecipeManager
+import com.example.recetario.data.SavedRecipeManager
+import com.example.recetario.data.StepManager
+import com.example.recetario.data.UserManager
+import com.example.recetario.model.Recipe
+import com.example.recetario.model.SavedRecipe
+import com.example.recetario.utils.NetworkUtils
+import com.example.recetario.utils.ZoomListener
+import com.google.android.material.button.MaterialButton
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.launch
+
 class RecipeDetailFragment : Fragment() {
 
     private lateinit var btnEliminarReceta: MaterialButton
+    private lateinit var btnEditarReceta: MaterialButton
     private lateinit var imgReceta: ImageView
     private lateinit var txtNombre: TextView
     private lateinit var txtUsuario: TextView
@@ -37,23 +42,20 @@ class RecipeDetailFragment : Fragment() {
     private lateinit var txtIngredientes: TextView
     private lateinit var txtProceso: TextView
     private lateinit var btnFavorito: MaterialButton
-    private var esFavorito = false
+    private lateinit var btnVolverDetalle: MaterialButton
     private lateinit var layoutZoom: FrameLayout
     private lateinit var imgZoom: ImageView
+
+    private var esFavorito = false
+    private var recetaActual: Recipe? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        val view = inflater.inflate(R.layout.fragment_recipe_detail, container, false)
 
-        val view = inflater.inflate(
-            R.layout.fragment_recipe_detail,
-            container,
-            false
-        )
-
-        // Inicialización de vistas
         imgReceta = view.findViewById(R.id.imgReceta)
         txtNombre = view.findViewById(R.id.txtNombre)
         txtUsuario = view.findViewById(R.id.txtUsuario)
@@ -61,6 +63,8 @@ class RecipeDetailFragment : Fragment() {
         txtIngredientes = view.findViewById(R.id.txtIngredientes)
         txtProceso = view.findViewById(R.id.txtProceso)
         btnFavorito = view.findViewById(R.id.btnFavorito)
+        btnVolverDetalle = view.findViewById(R.id.btnVolverDetalle)
+        btnEditarReceta = view.findViewById(R.id.btnEditarReceta)
         btnEliminarReceta = view.findViewById(R.id.btnEliminarReceta)
         layoutZoom = view.findViewById(R.id.layoutZoom)
         imgZoom = view.findViewById(R.id.imgZoom)
@@ -71,237 +75,216 @@ class RecipeDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        recetaActual = obtenerRecetaDesdeArgumentos()
 
-        // 1. Recuperar el objeto Receta de los argumentos de forma segura según la API
-        val receta =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                arguments?.getParcelable(
-                    "EXTRA_RECETA",
-                    Recipe::class.java
-                )
-            } else {
-                @Suppress("DEPRECATION")
-                arguments?.getParcelable("EXTRA_RECETA")
-            }
-
-        receta?.let { data ->
-            val usuarioActual = FirebaseAuth.getInstance().currentUser
-            txtNombre.text = data.nombre
-            txtDescripcion.text = data.descripcion
-
-            viewLifecycleOwner.lifecycleScope.launch {
-
-                // Obtener usuario
-                val usuario = UserManager.obtenerUsuario(
-                    data.usuarioId
-                )
-
-                txtUsuario.text =
-                    if (usuario != null) {
-                        "${usuario.nombre} ${usuario.apellido}"
-                    } else {
-                        "Usuario desconocido"
-                    }
-
-                // Obtener ingredientes
-                val ingredientes =
-                    IngredientManager.obtenerIngredientes(data.id)
-
-                txtIngredientes.text =
-                    ingredientes.joinToString("\n") {
-                        it.nombre
-                    }
-
-                // Obtener pasos
-                viewLifecycleOwner.lifecycleScope.launch {
-
-                    try {
-
-                        val pasos = StepManager.obtenerPasos(data.id)
-
-                        txtProceso.text = if (pasos.isNotEmpty()) {
-                            pasos.joinToString("\n") { paso ->
-                                "${paso.numero}. ${paso.descripcion}"
-                            }
-                        } else {
-                            "No hay pasos disponibles"
-                        }
-
-                    } catch (e: Exception) {
-
-                        e.printStackTrace()
-
-                        txtProceso.text = "Error cargando pasos"
-                    }
-                }
-
-                imgReceta.load(data.imagenUrl)
-                imgZoom.load(data.imagenUrl)
-                imgZoom.setOnClickListener {    }
-
-                usuarioActual?.let {
-
-                    esFavorito = SavedRecipeManager.esFavorito(
-                        it.uid,
-                        data.id
-                    )
-
-                    actualizarBotonFavorito()
-                }
-
-            }
-            btnFavorito.setOnClickListener {
-                val usuarioActual = FirebaseAuth.getInstance().currentUser
-                    ?: return@setOnClickListener
-                viewLifecycleOwner.lifecycleScope.launch {
-                    if (esFavorito) {
-                        val eliminado = SavedRecipeManager.eliminarFavorito(
-                            usuarioActual.uid,
-                            data.id
-                        )
-                        if (eliminado) {
-                            esFavorito = false
-                            actualizarBotonFavorito()
-                        }
-                    } else {
-                        val savedRecipe = SavedRecipe(
-                            id = "${usuarioActual.uid}_${data.id}",
-                            usuarioId = usuarioActual.uid,
-                            recetaId = data.id
-                        )
-                        val agregado = SavedRecipeManager.agregarFavorito(
-                            savedRecipe
-                        )
-                        if (agregado) {
-                            esFavorito = true
-                            actualizarBotonFavorito()
-                        }
-                    }
-                }
-            }
-            imgReceta.setOnClickListener {
-                layoutZoom.visibility = View.VISIBLE
-                imgZoom.scaleType = ImageView.ScaleType.FIT_CENTER
-                imgZoom.setOnTouchListener(ZoomListener(requireContext()))
-            }
-            layoutZoom.setOnTouchListener { _, event ->
-
-                if (event.action == android.view.MotionEvent.ACTION_DOWN) {
-
-                    val location = IntArray(2)
-                    imgZoom.getLocationOnScreen(location)
-
-                    val left = location[0]
-                    val top = location[1]
-                    val right = left + imgZoom.width
-                    val bottom = top + imgZoom.height
-
-                    if (event.rawX < left ||
-                        event.rawX > right ||
-                        event.rawY < top ||
-                        event.rawY > bottom
-                    ) {
-
-                        layoutZoom.visibility = View.GONE
-                        imgZoom.setOnTouchListener(null)
-                        imgZoom.scaleType = ImageView.ScaleType.FIT_CENTER
-                    }
-                }
-
-                false
-            }
-
-            if (usuarioActual != null && usuarioActual.uid == data.usuarioId) {
-                btnEliminarReceta.visibility = View.VISIBLE
-                btnEliminarReceta.isEnabled = true
-
-            } else {
-                btnEliminarReceta.visibility = View.GONE
-                btnEliminarReceta.isEnabled = false
-            }
-            btnEliminarReceta.setOnClickListener {
-                AlertDialog.Builder(requireContext())
-                    .setTitle("Eliminar receta")
-                    .setMessage("¿Seguro que deseas eliminar esta receta?")
-                    .setPositiveButton("Sí") { _, _ ->
-                        eliminarReceta(data)
-                    }
-                    .setNegativeButton("Cancelar", null)
-                    .show()
-            }
-
-        }
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
-
-            if (layoutZoom.visibility == View.VISIBLE) {
-
-                layoutZoom.visibility = View.GONE
-                imgZoom.setOnTouchListener(null)
-                imgZoom.scaleType = ImageView.ScaleType.FIT_CENTER
-            } else {
-                (requireActivity() as MainActivity).cambiarFragmento(
-                    HomeFragment(),
-                    agregarAlBackStack = false,
-                    mostrarMenu = true
-                )
-            }
+        val receta = recetaActual
+        if (receta == null) {
+            Toast.makeText(requireContext(), "No se pudo abrir la receta.", Toast.LENGTH_SHORT).show()
+            volverAListado()
+            return
         }
 
+        cargarDatosBase(receta)
+        configurarEventos(receta)
+        configurarBotonAtras()
     }
-    private fun eliminarReceta(receta: Recipe) {
+
+    private fun obtenerRecetaDesdeArgumentos(): Recipe? {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            arguments?.getParcelable("EXTRA_RECETA", Recipe::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            arguments?.getParcelable("EXTRA_RECETA")
+        }
+    }
+
+    /**
+     * Carga información relacionada de Firebase: autor, ingredientes, pasos y favorito.
+     */
+    private fun cargarDatosBase(receta: Recipe) {
+        val usuarioActual = FirebaseAuth.getInstance().currentUser
+
+        txtNombre.text = receta.nombre
+        txtDescripcion.text = receta.descripcion
+        imgReceta.load(receta.imagenUrl)
+        imgZoom.load(receta.imagenUrl)
+
+        configurarBotonesPropietario(usuarioActual?.uid == receta.usuarioId)
+
+        if (!NetworkUtils.hayConexion(requireContext())) {
+            Toast.makeText(requireContext(), "Sin conexión. La información puede estar incompleta.", Toast.LENGTH_LONG).show()
+            return
+        }
 
         viewLifecycleOwner.lifecycleScope.launch {
+            val usuario = UserManager.obtenerUsuario(receta.usuarioId)
+            txtUsuario.text = if (usuario != null) {
+                "Por ${usuario.nombre} ${usuario.apellido}"
+            } else {
+                "Por usuario desconocido"
+            }
 
+            val ingredientes = IngredientManager.obtenerIngredientes(receta.id)
+            txtIngredientes.text = if (ingredientes.isNotEmpty()) {
+                ingredientes.joinToString("\n") { "• ${it.nombre}" }
+            } else {
+                "No hay ingredientes disponibles."
+            }
+
+            val pasos = StepManager.obtenerPasos(receta.id)
+            txtProceso.text = if (pasos.isNotEmpty()) {
+                pasos.joinToString("\n\n") { paso ->
+                    "${paso.numero}. ${paso.descripcion}"
+                }
+            } else {
+                "No hay pasos disponibles."
+            }
+
+            if (usuarioActual != null) {
+                esFavorito = SavedRecipeManager.esFavorito(usuarioActual.uid, receta.id)
+                actualizarBotonFavorito()
+            }
+        }
+    }
+
+    private fun configurarEventos(receta: Recipe) {
+        btnVolverDetalle.setOnClickListener {
+            volverAListado()
+        }
+
+        btnFavorito.setOnClickListener {
+            alternarFavorito(receta)
+        }
+
+        btnEditarReceta.setOnClickListener {
+            val intent = Intent(requireContext(), CreateRecipeActivity::class.java).apply {
+                putExtra("EXTRA_RECETA_EDITAR", receta)
+            }
+            startActivity(intent)
+        }
+
+        btnEliminarReceta.setOnClickListener {
+            AlertDialog.Builder(requireContext())
+                .setTitle("Eliminar receta")
+                .setMessage("¿Seguro que deseas eliminar esta receta?")
+                .setPositiveButton("Sí") { _, _ -> eliminarReceta(receta) }
+                .setNegativeButton("Cancelar", null)
+                .show()
+        }
+
+        imgReceta.setOnClickListener {
+            layoutZoom.visibility = View.VISIBLE
+            imgZoom.scaleType = ImageView.ScaleType.FIT_CENTER
+            imgZoom.setOnTouchListener(ZoomListener(requireContext()))
+        }
+
+        layoutZoom.setOnClickListener {
+            cerrarZoom()
+        }
+    }
+
+    private fun configurarBotonesPropietario(esPropietario: Boolean) {
+        val visibilidad = if (esPropietario) View.VISIBLE else View.GONE
+        btnEditarReceta.visibility = visibilidad
+        btnEliminarReceta.visibility = visibilidad
+        btnEditarReceta.isEnabled = esPropietario
+        btnEliminarReceta.isEnabled = esPropietario
+    }
+
+    private fun alternarFavorito(receta: Recipe) {
+        val usuarioActual = FirebaseAuth.getInstance().currentUser
+        if (usuarioActual == null) {
+            Toast.makeText(requireContext(), "Debe iniciar sesión.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (!NetworkUtils.hayConexion(requireContext())) {
+            Toast.makeText(requireContext(), "Sin conexión. Intente nuevamente.", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        btnFavorito.isEnabled = false
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val correcto = if (esFavorito) {
+                SavedRecipeManager.eliminarFavorito(usuarioActual.uid, receta.id)
+            } else {
+                SavedRecipeManager.agregarFavorito(
+                    SavedRecipe(
+                        id = "${usuarioActual.uid}_${receta.id}",
+                        usuarioId = usuarioActual.uid,
+                        recetaId = receta.id
+                    )
+                )
+            }
+
+            if (correcto) {
+                esFavorito = !esFavorito
+                actualizarBotonFavorito()
+            } else {
+                Toast.makeText(requireContext(), "No se pudo actualizar guardados.", Toast.LENGTH_SHORT).show()
+            }
+
+            btnFavorito.isEnabled = true
+        }
+    }
+
+    private fun eliminarReceta(receta: Recipe) {
+        if (!NetworkUtils.hayConexion(requireContext())) {
+            Toast.makeText(requireContext(), "Sin conexión. Intente nuevamente.", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 IngredientManager.eliminarIngredientes(receta.id)
                 StepManager.eliminarPasos(receta.id)
                 val ok = RecipeManager.eliminarReceta(receta.id)
 
                 if (ok) {
-
-                    Toast.makeText(
-                        requireContext(),
-                        "Receta eliminada",
-                        Toast.LENGTH_SHORT
-                    ).show()
-
-                    parentFragmentManager.popBackStack()
-
+                    Toast.makeText(requireContext(), "Receta eliminada.", Toast.LENGTH_SHORT).show()
+                    volverAListado()
                 } else {
-
-                    Toast.makeText(
-                        requireContext(),
-                        "No se pudo eliminar",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(requireContext(), "No se pudo eliminar la receta.", Toast.LENGTH_SHORT).show()
                 }
-
             } catch (e: Exception) {
-
-                Toast.makeText(
-                    requireContext(),
-                    "Error al eliminar receta",
-                    Toast.LENGTH_SHORT
-                ).show()
-
                 e.printStackTrace()
+                Toast.makeText(requireContext(), "Error al eliminar receta.", Toast.LENGTH_SHORT).show()
             }
         }
     }
-    private fun actualizarBotonFavorito() {
 
-        if (esFavorito) {
-
-            btnFavorito.setIconResource(R.drawable.outline_bookmark_24)
-
-            btnFavorito.text = "Guardada"
-
-        } else {
-
-            btnFavorito.setIconResource(R.drawable.outline_bookmark_add_24)
-
-            btnFavorito.text = "Guardar receta"
+    private fun configurarBotonAtras() {
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+            if (layoutZoom.visibility == View.VISIBLE) {
+                cerrarZoom()
+            } else {
+                volverAListado()
+            }
         }
     }
 
+    private fun cerrarZoom() {
+        layoutZoom.visibility = View.GONE
+        imgZoom.setOnTouchListener(null)
+        imgZoom.scaleType = ImageView.ScaleType.FIT_CENTER
+    }
+
+    private fun volverAListado() {
+        (requireActivity() as MainActivity).cambiarFragmento(
+            HomeFragment(),
+            agregarAlBackStack = false,
+            mostrarMenu = true
+        )
+    }
+
+    private fun actualizarBotonFavorito() {
+        if (esFavorito) {
+            btnFavorito.setIconResource(R.drawable.outline_bookmark_24)
+            btnFavorito.text = "Guardada"
+        } else {
+            btnFavorito.setIconResource(R.drawable.outline_bookmark_add_24)
+            btnFavorito.text = "Guardar receta"
+        }
+    }
 }

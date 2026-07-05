@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:paddingTop="6dp">
 
     <TextView
         android:id="@+id/txtTituloMisRecetas"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Mis recetas"
-        android:textSize="24sp"
+        android:text="Mis publicaciones"
+        android:textColor="@color/recipe_text_primary"
+        android:textSize="20sp"
         android:textStyle="bold" />
 
     <TextView
@@ -19,14 +21,17 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
         android:text="Todavía no has publicado recetas."
+        android:textColor="@color/recipe_text_secondary"
         android:textSize="15sp"
         android:visibility="gone" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerMyRecipes"
         android:layout_width="match_parent"
-        android:layout_height="190dp"
+        android:layout_height="220dp"
         android:layout_marginTop="12dp"
-        android:nestedScrollingEnabled="false" />
+        android:clipToPadding="false"
+        android:nestedScrollingEnabled="false"
+        tools:listitem="@layout/item_profile_recipe" />
 
 </LinearLayout>

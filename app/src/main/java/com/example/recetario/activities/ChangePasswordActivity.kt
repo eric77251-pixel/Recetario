@@ -6,7 +6,9 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.recetario.utils.ValidationUtils
+import com.example.recetario.utils.NetworkUtils
 import com.example.recetario.R
+import com.example.recetario.utils.SystemBarUtils
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 
@@ -25,6 +27,7 @@ class ChangePasswordActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_change_password)
+        SystemBarUtils.aplicarInsets(findViewById(R.id.rootChangePassword))
 
         // Referencias a la interfaz
         txtPasswordActual = findViewById(R.id.txtPasswordActual)
@@ -79,7 +82,7 @@ class ChangePasswordActivity : AppCompatActivity() {
         if (!ValidationUtils.contraseñaValida(nuevaPassword)) {
 
             txtNuevaPassword.error =
-                "La contraseña debe tener al menos 12 caracteres, una letra, un número y un símbolo"
+                ValidationUtils.mensajeReglaPassword()
 
             txtNuevaPassword.requestFocus()
             return
@@ -110,6 +113,15 @@ class ChangePasswordActivity : AppCompatActivity() {
                 "Las contraseñas no coinciden"
 
             txtConfirmarPassword.requestFocus()
+            return
+        }
+
+        if (!NetworkUtils.hayConexion(this)) {
+            Toast.makeText(
+                this,
+                "Sin conexión. Intente nuevamente.",
+                Toast.LENGTH_LONG
+            ).show()
             return
         }
 

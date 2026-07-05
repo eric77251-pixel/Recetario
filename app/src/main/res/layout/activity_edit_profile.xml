@@ -3,15 +3,19 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rootEditProfile"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/recipe_background"
+    android:fitsSystemWindows="true"
     tools:context=".activities.EditProfileActivity">
 
     <androidx.core.widget.NestedScrollView
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
+        android:fillViewport="true"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/btnGuardarCambios"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -19,125 +23,119 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="22dp">
 
             <TextView
-                android:id="@+id/txtTituloEditarPerfil"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Editar Perfil"
-                android:textSize="32sp"
+                android:text="Editar perfil"
+                android:textColor="@color/recipe_text_primary"
+                android:textSize="30sp"
                 android:textStyle="bold" />
 
-            <androidx.constraintlayout.widget.ConstraintLayout
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp">
+                android:layout_marginTop="4dp"
+                android:text="Actualiza tu nombre, apellido o foto de perfil."
+                android:textColor="@color/recipe_text_secondary" />
 
-                <androidx.cardview.widget.CardView
-                    android:id="@+id/cardFotoEditar"
-                    android:layout_width="100dp"
-                    android:layout_height="100dp"
-                    app:cardCornerRadius="50dp"
-                    app:cardElevation="4dp"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent">
-
-                    <ImageView
-                        android:id="@+id/imgFotoEditarPerfil"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:scaleType="centerCrop"
-                        android:src="@android:drawable/sym_def_app_icon"
-                        tools:srcCompat="@tools:sample/avatars" />
-                </androidx.cardview.widget.CardView>
-
-
-                <TextView
-                    android:id="@+id/txtCambiarFoto"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Cambiar foto de perfil"
-                    android:textColor="?attr/colorPrimary"
-                    android:textStyle="bold"
-                    android:textSize="14sp"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/cardFotoEditar" />
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <!-- Formulario de Datos -->
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="4dp">
+                android:layout_marginTop="22dp"
+                app:cardBackgroundColor="@color/recipe_surface"
+                app:cardCornerRadius="28dp"
+                app:cardElevation="5dp"
+                app:strokeColor="@color/recipe_outline"
+                app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:gravity="center_horizontal"
                     android:orientation="vertical"
                     android:padding="20dp">
 
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="118dp"
+                        android:layout_height="118dp"
+                        app:cardCornerRadius="59dp"
+                        app:cardElevation="5dp">
+
+                        <ImageView
+                            android:id="@+id/imgFotoEditarPerfil"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:contentDescription="Foto de perfil"
+                            android:scaleType="centerCrop"
+                            android:src="@android:drawable/sym_def_app_icon"
+                            tools:srcCompat="@tools:sample/avatars" />
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <TextView
+                        android:id="@+id/txtCambiarFoto"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:background="@drawable/bg_chip"
+                        android:paddingStart="16dp"
+                        android:paddingTop="8dp"
+                        android:paddingEnd="16dp"
+                        android:paddingBottom="8dp"
+                        android:text="Cambiar foto"
+                        android:textColor="@color/recipe_primary"
+                        android:textStyle="bold" />
 
                     <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/layoutEditarNombre"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Nombre"
-                        android:layout_marginBottom="16dp"
-                        app:startIconDrawable="@android:drawable/ic_menu_myplaces"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                        android:layout_marginTop="22dp"
+                        android:hint="Nombre">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etEditarNombre"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:inputType="textPersonName" />
+                            android:inputType="textCapWords" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/layoutEditarApellido"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Apellido"
-                        app:startIconDrawable="@android:drawable/ic_menu_myplaces"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                        android:layout_marginTop="12dp"
+                        android:hint="Apellido">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etEditarApellido"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:inputType="textPersonName" />
+                            android:inputType="textCapWords" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnIrCambiarContrasena"
+                        android:id="@+id/btnGuardarCambios"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Seguridad"
-                        app:icon="@android:drawable/ic_lock_lock"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+                        android:layout_height="54dp"
+                        android:layout_marginTop="20dp"
+                        android:text="Guardar cambios"
+                        android:textAllCaps="false"
+                        android:textStyle="bold"
+                        app:cornerRadius="18dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnIrCambiarContrasena"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="54dp"
+                        android:layout_marginTop="10dp"
+                        android:text="Cambiar contraseña"
+                        android:textAllCaps="false"
+                        app:cornerRadius="18dp" />
                 </LinearLayout>
-
-
-            </androidx.cardview.widget.CardView>
-
+            </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
-
-    <Button
-        android:id="@+id/btnGuardarCambios"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Guardar Cambios"
-        android:layout_margin="16dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>

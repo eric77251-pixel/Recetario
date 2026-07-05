@@ -1,60 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<androidx.cardview.widget.CardView
+<com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="6dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="4dp">
+    android:layout_margin="8dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
+    app:cardBackgroundColor="@color/recipe_surface"
+    app:cardCornerRadius="22dp"
+    app:cardElevation="5dp"
+    app:strokeColor="@color/recipe_outline"
+    app:strokeWidth="1dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="10dp">
+        android:orientation="vertical">
 
-        <!-- Imagen-->
         <ImageView
             android:id="@+id/imgPost"
             android:layout_width="match_parent"
-            android:layout_height="140dp"
+            android:layout_height="150dp"
+            android:contentDescription="Imagen de receta"
             android:scaleType="centerCrop"
-            tools:src="@tools:sample/avatars" />
+            android:src="@drawable/ic_launcher_foreground"
+            tools:src="@tools:sample/backgrounds/scenic" />
 
-        <!-- Nombre del archivo -->
-        <TextView
-            android:id="@+id/txtRecetaNombre"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Nombre de la Receta"
-            android:textColor="#000000"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:orientation="vertical"
+            android:padding="12dp">
 
-        <!-- Descripción -->
-        <TextView
-            android:id="@+id/txtDescripcion"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="Descripción breve de la Receta"
-            android:textColor="#666666"
-            android:textSize="14sp" />
+            <TextView
+                android:id="@+id/txtRecetaNombre"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textColor="@color/recipe_text_primary"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                tools:text="Pasta cremosa" />
 
-        <!-- Fecha -->
-        <TextView
-            android:id="@+id/txtRecetaUsuario"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="usuario"
-            android:textColor="#999999"
-            android:textSize="12sp" />
+            <TextView
+                android:id="@+id/txtDescripcion"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textColor="@color/recipe_text_secondary"
+                android:textSize="13sp"
+                tools:text="Una receta rápida para compartir en familia." />
 
+            <TextView
+                android:id="@+id/txtRecetaUsuario"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textColor="@color/recipe_primary"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                tools:text="Kelly Beitia" />
+        </LinearLayout>
     </LinearLayout>
-
-</androidx.cardview.widget.CardView>
+</com.google.android.material.card.MaterialCardView>

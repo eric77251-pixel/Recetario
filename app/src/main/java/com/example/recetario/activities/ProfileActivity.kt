@@ -5,12 +5,14 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import coil.load
 import com.example.recetario.R
+import com.example.recetario.utils.SystemBarUtils
 import com.example.recetario.data.RecipeManager
 import com.example.recetario.data.SavedRecipeManager
 import com.example.recetario.data.UserManager
@@ -18,6 +20,8 @@ import com.example.recetario.fragments.MyRecipesFragment
 import com.example.recetario.fragments.SavedRecipesFragment
 import com.example.recetario.model.Recipe
 import com.example.recetario.utils.NavigationHelper
+import com.example.recetario.utils.NetworkUtils
+import com.example.recetario.utils.SessionManager
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
@@ -25,7 +29,7 @@ import kotlinx.coroutines.launch
 class ProfileActivity : AppCompatActivity() {
 
     private lateinit var bottomNavigation: BottomNavigationView
-    private lateinit var botonEditarPerfil: Button
+    private lateinit var btnEditarPerfil: Button
     private lateinit var btnTabGuardadas: Button
     private lateinit var btnTabMisRecetas: Button
 
@@ -38,12 +42,12 @@ class ProfileActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_profile)
+        SystemBarUtils.aplicarInsets(findViewById(R.id.rootProfile))
 
         inicializarVistas()
-        configurarNavegacionInferior()
+        configurarNavegacion()
         configurarEventos()
-        cargarUsuario()
-        cargarEstadisticasPerfil()
+        cargarDatosPerfil()
 
         if (savedInstanceState == null) {
             mostrarFragmentoPerfil(SavedRecipesFragment())
@@ -58,20 +62,38 @@ class ProfileActivity : AppCompatActivity() {
         txtCantidadRecetas = findViewById(R.id.txtCantidadRecetas)
         txtFavoritas = findViewById(R.id.txtFavoritas)
         bottomNavigation = findViewById(R.id.bottomNavigation)
-        botonEditarPerfil = findViewById(R.id.btnEditarPerfil)
+        btnEditarPerfil = findViewById(R.id.btnEditarPerfil)
         btnTabGuardadas = findViewById(R.id.btnTabGuardadas)
         btnTabMisRecetas = findViewById(R.id.btnTabMisRecetas)
     }
 
-    private fun configurarEventos() {
+    /**
+     * Mantiene la navegación inferior coherente con las demás pantallas principales.
+     */
+    private fun configurarNavegacion() {
+        bottomNavigation.selectedItemId = R.id.nav_perfil
+
+        bottomNavigation.setOnItemSelectedListener {
+            when (it.itemId) {
+                R.id.nav_recetas -> NavigationHelper.irRecetas(this)
+                R.id.nav_add -> NavigationHelper.irPublicacion(this)
+                R.id.nav_perfil -> true
+                else -> false
+            }
+        }
+
         onBackPressedDispatcher.addCallback(this) {
             NavigationHelper.volverARecetas(this@ProfileActivity)
         }
+    }
 
-        botonEditarPerfil.setOnClickListener {
-            val intent = Intent(this, EditProfileActivity::class.java)
-            startActivity(intent)
-            finish()
+    /**
+     * ProfileActivity funciona como contenedor: cambia entre las secciones internas
+     * del perfil sin crear actividades adicionales.
+     */
+    private fun configurarEventos() {
+        btnEditarPerfil.setOnClickListener {
+            startActivity(Intent(this, EditProfileActivity::class.java))
         }
 
         btnTabGuardadas.setOnClickListener {
@@ -82,19 +104,6 @@ class ProfileActivity : AppCompatActivity() {
         btnTabMisRecetas.setOnClickListener {
             mostrarFragmentoPerfil(MyRecipesFragment())
             marcarTabActiva(esGuardadas = false)
-        }
-    }
-
-    private fun configurarNavegacionInferior() {
-        bottomNavigation.selectedItemId = R.id.nav_perfil
-
-        bottomNavigation.setOnItemSelectedListener {
-            when (it.itemId) {
-                R.id.nav_recetas -> NavigationHelper.irRecetas(this)
-                R.id.nav_add -> NavigationHelper.irPublicacion(this)
-                R.id.nav_perfil -> true
-                else -> false
-            }
         }
     }
 
@@ -109,33 +118,40 @@ class ProfileActivity : AppCompatActivity() {
         btnTabMisRecetas.isSelected = !esGuardadas
     }
 
-    private fun cargarUsuario() {
+    private fun cargarDatosPerfil() {
+        if (!NetworkUtils.hayConexion(this)) {
+            Toast.makeText(this, "Sin conexión. No se pudo cargar el perfil.", Toast.LENGTH_LONG).show()
+            return
+        }
+
         lifecycleScope.launch {
-            val firebaseUser = FirebaseAuth.getInstance().currentUser ?: return@launch
-            val usuario = UserManager.obtenerUsuario(firebaseUser.uid) ?: return@launch
-
-            txtNombreUsuario.text = "${usuario.nombre} ${usuario.apellido}"
-            txtCorreoUsuario.text = usuario.correo
-
-            if (usuario.fotoPerfil.isNotBlank()) {
-                imgFotoPerfil.load(usuario.fotoPerfil)
-            } else {
-                imgFotoPerfil.setImageResource(android.R.drawable.sym_def_app_icon)
-            }
+            cargarUsuario()
+            cargarEstadisticasPerfil()
         }
     }
 
+    private suspend fun cargarUsuario() {
+        val firebaseUser = FirebaseAuth.getInstance().currentUser ?: return
+        val usuario = UserManager.obtenerUsuario(firebaseUser.uid) ?: return
 
-    private fun cargarEstadisticasPerfil() {
-        lifecycleScope.launch {
-            val firebaseUser = FirebaseAuth.getInstance().currentUser ?: return@launch
+        SessionManager.usuario = usuario
+        txtNombreUsuario.text = "${usuario.nombre} ${usuario.apellido}"
+        txtCorreoUsuario.text = usuario.correo
 
-            val recetasPublicadas = RecipeManager.obtenerRecetasUsuario(firebaseUser.uid)
-            val recetasGuardadas = SavedRecipeManager.obtenerFavoritos(firebaseUser.uid)
-
-            actualizarCantidadPublicadas(recetasPublicadas.size)
-            actualizarCantidadGuardadas(recetasGuardadas.size)
+        if (usuario.fotoPerfil.isNotBlank()) {
+            imgFotoPerfil.load(usuario.fotoPerfil)
+        } else {
+            imgFotoPerfil.setImageResource(android.R.drawable.sym_def_app_icon)
         }
+    }
+
+    private suspend fun cargarEstadisticasPerfil() {
+        val firebaseUser = FirebaseAuth.getInstance().currentUser ?: return
+        val recetasPublicadas = RecipeManager.obtenerRecetasUsuario(firebaseUser.uid)
+        val recetasGuardadas = SavedRecipeManager.obtenerFavoritos(firebaseUser.uid)
+
+        actualizarCantidadPublicadas(recetasPublicadas.size)
+        actualizarCantidadGuardadas(recetasGuardadas.size)
     }
 
     fun actualizarCantidadGuardadas(cantidad: Int) {
@@ -151,7 +167,11 @@ class ProfileActivity : AppCompatActivity() {
             putExtra("EXTRA_RECETA", receta)
             putExtra("ABRIR_DETALLE", true)
         }
-
         startActivity(intent)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        cargarDatosPerfil()
     }
 }

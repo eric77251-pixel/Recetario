@@ -13,6 +13,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.recetario.utils.AuthManager
 import com.example.recetario.utils.ValidationUtils
+import com.example.recetario.utils.NetworkUtils
 import com.example.recetario.data.UserManager
 import com.example.recetario.model.User
 import com.google.firebase.auth.FirebaseAuth
@@ -46,6 +47,15 @@ class RegisterFragment : Fragment() {
         btnCrearUsuario.setOnClickListener {
 
             if (!validarFormulario()) return@setOnClickListener
+
+            if (!NetworkUtils.hayConexion(requireContext())) {
+                Toast.makeText(
+                    requireContext(),
+                    "Sin conexión. Intente nuevamente.",
+                    Toast.LENGTH_LONG
+                ).show()
+                return@setOnClickListener
+            }
 
             btnCrearUsuario.isEnabled = false
 
@@ -169,7 +179,8 @@ class RegisterFragment : Fragment() {
         }
 
         if (!ValidationUtils.contraseñaValida(password)) {
-            txtPassword.error = "Contraseña débil"
+            txtPassword.error = ValidationUtils.mensajeReglaPassword()
+            txtPassword.requestFocus()
             return false
         }
 

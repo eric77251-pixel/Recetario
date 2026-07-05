@@ -1,113 +1,281 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/recipe_background">
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="20dp">
 
-            <ImageView
-                android:id="@+id/imgReceta"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="250dp"
-                android:scaleType="centerCrop" />
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:layout_marginBottom="14dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnVolverDetalle"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="48dp"
+                    android:text="Volver"
+                    android:textAllCaps="false"
+                    app:cornerRadius="18dp"
+                    app:icon="@android:drawable/ic_media_previous"
+                    app:iconGravity="textStart" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:text="Detalle de receta"
+                    android:textColor="@color/recipe_text_primary"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="260dp"
+                app:cardCornerRadius="28dp"
+                app:cardElevation="6dp">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <ImageView
+                        android:id="@+id/imgReceta"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:contentDescription="Imagen de la receta"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/ic_launcher_foreground"
+                        tools:src="@tools:sample/backgrounds/scenic" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom|end"
+                        android:layout_margin="12dp"
+                        android:background="@drawable/bg_zoom_hint"
+                        android:paddingStart="12dp"
+                        android:paddingTop="7dp"
+                        android:paddingEnd="12dp"
+                        android:paddingBottom="7dp"
+                        android:text="Toca para ampliar"
+                        android:textColor="@android:color/white"
+                        android:textSize="12sp" />
+                </FrameLayout>
+            </com.google.android.material.card.MaterialCardView>
 
             <TextView
                 android:id="@+id/txtNombre"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:textSize="24sp"
-                android:textStyle="bold" />
+                android:layout_marginTop="18dp"
+                android:textColor="@color/recipe_text_primary"
+                android:textSize="30sp"
+                android:textStyle="bold"
+                tools:text="Pollo al horno" />
 
             <TextView
                 android:id="@+id/txtUsuario"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="14sp" />
+                android:layout_marginTop="4dp"
+                android:textColor="@color/recipe_primary"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                tools:text="Por Kelly Beitia" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnFavorito"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="Guardar"
-                android:textAllCaps="false"
-                app:icon="@drawable/outline_bookmark_add_24"
-                app:iconGravity="textStart"
-                app:iconPadding="8dp"/>
-
-            <TextView
-                android:id="@+id/txtDescripcion"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp" />
+                android:layout_marginTop="14dp"
+                android:orientation="horizontal">
 
-            <TextView
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnFavorito"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
+                    android:layout_weight="1"
+                    android:text="Guardar"
+                    android:textAllCaps="false"
+                    app:cornerRadius="18dp"
+                    app:icon="@drawable/outline_bookmark_add_24"
+                    app:iconGravity="textStart" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnEditarReceta"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:enabled="false"
+                    android:text="Editar"
+                    android:textAllCaps="false"
+                    android:visibility="gone"
+                    app:cornerRadius="18dp"
+                    tools:visibility="visible" />
+            </LinearLayout>
+
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Ingredientes"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+                app:cardBackgroundColor="@color/recipe_surface"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="4dp"
+                app:strokeColor="@color/recipe_outline"
+                app:strokeWidth="1dp">
 
-            <TextView
-                android:id="@+id/txtIngredientes"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-            <TextView
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Descripción"
+                        android:textColor="@color/recipe_text_primary"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/txtDescripcion"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:lineSpacingExtra="3dp"
+                        android:textColor="@color/recipe_text_secondary"
+                        android:textSize="15sp"
+                        tools:text="Una receta sencilla para preparar en casa." />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Proceso"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+                android:layout_marginTop="14dp"
+                app:cardBackgroundColor="@color/recipe_surface"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="4dp"
+                app:strokeColor="@color/recipe_outline"
+                app:strokeWidth="1dp">
 
-            <TextView
-                android:id="@+id/txtProceso"
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Ingredientes"
+                        android:textColor="@color/recipe_text_primary"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/txtIngredientes"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:lineSpacingExtra="5dp"
+                        android:textColor="@color/recipe_text_secondary"
+                        android:textSize="15sp"
+                        tools:text="• Harina\n• Huevo\n• Leche" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="@color/recipe_surface"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="4dp"
+                app:strokeColor="@color/recipe_outline"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Preparación"
+                        android:textColor="@color/recipe_text_primary"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/txtProceso"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:lineSpacingExtra="5dp"
+                        android:textColor="@color/recipe_text_secondary"
+                        android:textSize="15sp"
+                        tools:text="1. Mezclar ingredientes.\n\n2. Hornear por 30 minutos." />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnEliminarReceta"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Eliminar"
-                android:visibility="gone"
+                android:layout_height="54dp"
+                android:layout_marginBottom="24dp"
                 android:enabled="false"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
-
+                android:text="Eliminar receta"
+                android:textAllCaps="false"
+                android:textColor="@color/recipe_error"
+                android:visibility="gone"
+                app:cornerRadius="18dp"
+                app:strokeColor="@color/recipe_error"
+                tools:visibility="visible" />
         </LinearLayout>
-
     </ScrollView>
 
     <FrameLayout
         android:id="@+id/layoutZoom"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#CC000000"
-        android:visibility="gone"
+        android:background="#E6000000"
         android:clickable="true"
-        android:focusable="true">
+        android:focusable="true"
+        android:visibility="gone">
 
         <ImageView
             android:id="@+id/imgZoom"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:adjustViewBounds="true"
-            android:scaleType="fitCenter"/>
-
+            android:contentDescription="Imagen ampliada"
+            android:scaleType="fitCenter" />
     </FrameLayout>
-
 </FrameLayout>

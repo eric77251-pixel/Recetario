@@ -1,7 +1,15 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
     <style name="Base.Theme.Recetario" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+        <item name="colorPrimary">@color/recipe_primary</item>
+        <item name="colorOnPrimary">@color/black</item>
+        <item name="colorSecondary">@color/recipe_secondary</item>
+        <item name="colorOnSecondary">@color/black</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:navigationBarColor">@color/recipe_surface</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:enforceNavigationBarContrast" tools:targetApi="q">false</item>
+        <item name="android:navigationBarDividerColor">@color/recipe_surface</item>
+        <item name="android:statusBarColor">@color/recipe_background</item>
+        <item name="android:fontFamily">sans</item>
     </style>
 </resources>

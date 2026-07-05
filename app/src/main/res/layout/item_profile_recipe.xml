@@ -1,13 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<androidx.cardview.widget.CardView
+<com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="140dp"
-    android:layout_height="180dp"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="150dp"
+    android:layout_height="205dp"
     android:layout_margin="8dp"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="4dp">
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
+    app:cardBackgroundColor="@color/recipe_surface"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="4dp"
+    app:strokeColor="@color/recipe_outline"
+    app:strokeWidth="1dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -17,20 +23,24 @@
         <ImageView
             android:id="@+id/imgReceta"
             android:layout_width="match_parent"
-            android:layout_height="130dp"
+            android:layout_height="145dp"
+            android:contentDescription="Imagen de receta"
             android:scaleType="centerCrop"
-            android:src="@drawable/ic_launcher_foreground"/>
+            android:src="@drawable/ic_launcher_foreground"
+            tools:src="@tools:sample/backgrounds/scenic" />
 
         <TextView
             android:id="@+id/txtNombreReceta"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:maxLines="2"
             android:padding="8dp"
-            android:text="Nombre receta"
-            android:textAlignment="center"
-            android:textSize="14sp"
-            android:textStyle="bold"/>
-
+            android:textColor="@color/recipe_text_primary"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            tools:text="Receta guardada" />
     </LinearLayout>
-
-</androidx.cardview.widget.CardView>
+</com.google.android.material.card.MaterialCardView>

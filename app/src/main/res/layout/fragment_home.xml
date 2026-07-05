@@ -1,41 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/recipe_background">
 
     <include
-        android:id="@+id/layoutBuscar"
+        android:id="@+id/includeSearch"
         layout="@layout/include_recipe_search"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="20dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Lista de recetas -->
+    <LinearLayout
+        android:id="@+id/homeHeader"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="18dp"
+        android:layout_marginEnd="20dp"
+        android:orientation="vertical"
+        app:layout_constraintTop_toBottomOf="@id/includeSearch"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Recetas para hoy"
+            android:textColor="@color/recipe_text_primary"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="Busca ideas, guarda favoritas y comparte tus preparaciones."
+            android:textColor="@color/recipe_text_secondary"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/txtEstadoRecetas"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="18dp"
+        android:textColor="@color/recipe_text_secondary"
+        android:textSize="15sp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/homeHeader"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="Cargando recetas..."
+        tools:visibility="visible" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerReceta"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:padding="8dp"
         android:clipToPadding="false"
-        app:layout_constraintTop_toBottomOf="@id/layoutBuscar"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:paddingBottom="24dp"
+        app:layout_constraintTop_toBottomOf="@id/txtEstadoRecetas"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:listitem="@layout/item_recipe" />
 
-    <!-- Botón para agregar receta -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/AgregarReceta"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:contentDescription="Publicar nueva receta"
+        android:layout_margin="20dp"
+        android:contentDescription="Agregar receta"
+        app:backgroundTint="@color/recipe_primary"
         app:srcCompat="@android:drawable/ic_input_add"
+        app:tint="@android:color/white"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

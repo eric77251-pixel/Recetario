@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -15,6 +16,7 @@ import com.example.recetario.adapter.ProfileRecipeAdapter
 import com.example.recetario.data.RecipeManager
 import com.example.recetario.data.SavedRecipeManager
 import com.example.recetario.model.Recipe
+import com.example.recetario.utils.NetworkUtils
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
@@ -55,7 +57,15 @@ class SavedRecipesFragment : Fragment() {
         cargarRecetasGuardadas()
     }
 
+    /**
+     * Carga las recetas guardadas del usuario autenticado y actualiza el contador del perfil.
+     */
     private fun cargarRecetasGuardadas() {
+        if (!NetworkUtils.hayConexion(requireContext())) {
+            Toast.makeText(requireContext(), "Sin conexión. No se pudieron cargar las guardadas.", Toast.LENGTH_LONG).show()
+            return
+        }
+
         viewLifecycleOwner.lifecycleScope.launch {
             val usuario = FirebaseAuth.getInstance().currentUser ?: return@launch
             val favoritos = SavedRecipeManager.obtenerFavoritos(usuario.uid)
@@ -64,7 +74,6 @@ class SavedRecipesFragment : Fragment() {
 
             for (favorito in favoritos) {
                 val receta = RecipeManager.obtenerReceta(favorito.recetaId)
-
                 if (receta != null) {
                     savedRecipes.add(receta)
                 }

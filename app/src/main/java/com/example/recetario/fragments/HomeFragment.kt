@@ -4,17 +4,20 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
-import androidx.appcompat.widget.SearchView
 import android.view.ViewGroup
+import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.recetario.R
 import com.example.recetario.activities.CreateRecipeActivity
 import com.example.recetario.adapter.RecipeAdapter
 import com.example.recetario.data.RecipeManager
 import com.example.recetario.model.Recipe
-import com.example.recetario.R
+import com.example.recetario.utils.NetworkUtils
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.launch
 
@@ -23,6 +26,7 @@ class HomeFragment : Fragment() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var searchView: SearchView
     private lateinit var adapter: RecipeAdapter
+    private lateinit var txtEstadoRecetas: TextView
 
     private val listaCompleta = mutableListOf<Recipe>()
     private val listaRecetas = mutableListOf<Recipe>()
@@ -40,6 +44,7 @@ class HomeFragment : Fragment() {
 
         recyclerView = view.findViewById(R.id.recyclerReceta)
         searchView = view.findViewById(R.id.txtBuscarReceta)
+        txtEstadoRecetas = view.findViewById(R.id.txtEstadoRecetas)
         val agregarReceta = view.findViewById<FloatingActionButton>(R.id.AgregarReceta)
 
         recyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
@@ -51,30 +56,35 @@ class HomeFragment : Fragment() {
         recyclerView.adapter = adapter
 
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-
             override fun onQueryTextSubmit(query: String?): Boolean {
-                filtrarRecetas(query ?: "")
+                filtrarRecetas(query.orEmpty())
                 return true
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                filtrarRecetas(newText ?: "")
+                filtrarRecetas(newText.orEmpty())
                 return true
             }
         })
 
-
         agregarReceta.setOnClickListener {
-            val intent = Intent(requireContext(), CreateRecipeActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(requireContext(), CreateRecipeActivity::class.java))
         }
-        cargarRecetas()
+
     }
 
+    /**
+     * Carga las recetas desde Firebase y actualiza el RecyclerView.
+     */
     private fun cargarRecetas() {
+        if (!NetworkUtils.hayConexion(requireContext())) {
+            mostrarEstado("Sin conexión. Revisa tu internet para cargar recetas.")
+            return
+        }
+
+        mostrarEstado("Cargando recetas...")
 
         viewLifecycleOwner.lifecycleScope.launch {
-
             val recetas = RecipeManager.obtenerRecetas()
 
             listaCompleta.clear()
@@ -84,48 +94,67 @@ class HomeFragment : Fragment() {
             listaRecetas.addAll(recetas)
 
             adapter.notifyDataSetChanged()
+
+            if (recetas.isEmpty()) {
+                mostrarEstado("Aún no hay recetas publicadas.")
+            } else {
+                ocultarEstado()
+            }
         }
     }
 
     private fun abrirDetalle(receta: Recipe) {
-
-        val fragment = RecipeDetailFragment()
-
-        val args = Bundle()
-        args.putParcelable("EXTRA_RECETA", receta)
-
-        fragment.arguments = args
+        val fragment = RecipeDetailFragment().apply {
+            arguments = Bundle().apply {
+                putParcelable("EXTRA_RECETA", receta)
+            }
+        }
 
         parentFragmentManager.beginTransaction()
             .replace(R.id.contenedorFragments, fragment)
             .addToBackStack(null)
             .commit()
     }
-    private fun filtrarRecetas(texto: String) {
 
+    private fun filtrarRecetas(texto: String) {
         listaRecetas.clear()
 
         if (texto.isBlank()) {
-
             listaRecetas.addAll(listaCompleta)
-
         } else {
-
-            val resultado = listaCompleta.filter {
-
-                it.nombre.contains(texto, ignoreCase = true)
-
-            }
-
-            listaRecetas.addAll(resultado)
+            listaRecetas.addAll(
+                listaCompleta.filter {
+                    it.nombre.contains(texto, ignoreCase = true) ||
+                            it.descripcion.contains(texto, ignoreCase = true)
+                }
+            )
         }
 
         adapter.notifyDataSetChanged()
+
+        if (listaRecetas.isEmpty()) {
+            mostrarEstado("No encontramos recetas con esa búsqueda.")
+        } else {
+            ocultarEstado()
+        }
+    }
+
+    private fun mostrarEstado(mensaje: String) {
+        txtEstadoRecetas.text = mensaje
+        txtEstadoRecetas.visibility = View.VISIBLE
+        if (mensaje.startsWith("Sin conexión")) {
+            Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun ocultarEstado() {
+        txtEstadoRecetas.visibility = View.GONE
     }
 
     override fun onResume() {
         super.onResume()
-
-        cargarRecetas()
+        if (::adapter.isInitialized) {
+            cargarRecetas()
+        }
     }
 }

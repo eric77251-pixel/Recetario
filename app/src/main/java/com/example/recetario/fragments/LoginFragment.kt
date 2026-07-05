@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.example.recetario.activities.MainActivity
 import com.example.recetario.utils.ValidationUtils
+import com.example.recetario.utils.NetworkUtils
 import com.example.recetario.R
 import com.example.recetario.utils.AuthManager
 import androidx.lifecycle.lifecycleScope
@@ -82,6 +83,15 @@ class LoginFragment : Fragment() {
         if (ValidationUtils.campoVacio(contraseña)) {
             txtPasswordLogin.error = "Ingrese una contraseña"
             txtPasswordLogin.requestFocus()
+            return
+        }
+
+        if (!NetworkUtils.hayConexion(requireContext())) {
+            Toast.makeText(
+                requireContext(),
+                "Sin conexión. Intente nuevamente.",
+                Toast.LENGTH_LONG
+            ).show()
             return
         }
 

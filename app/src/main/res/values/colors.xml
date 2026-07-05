@@ -2,4 +2,17 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Paleta clara de la app Recetario -->
+    <color name="recipe_primary">#D66A2A</color>
+    <color name="recipe_primary_dark">#A84D1D</color>
+    <color name="recipe_secondary">#2E7D57</color>
+    <color name="recipe_background">#FFF8F1</color>
+    <color name="recipe_surface">#FFFFFFFF</color>
+    <color name="recipe_surface_variant">#F5E9DD</color>
+    <color name="recipe_text_primary">#241B14</color>
+    <color name="recipe_text_secondary">#6D5B4D</color>
+    <color name="recipe_outline">#E0C7B3</color>
+    <color name="recipe_error">#B3261E</color>
+    <color name="recipe_media_placeholder">#33261F</color>
 </resources>

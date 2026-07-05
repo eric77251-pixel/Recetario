@@ -1,23 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="16dp"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="4dp">
+    app:cardBackgroundColor="@color/recipe_surface"
+    app:cardCornerRadius="22dp"
+    app:cardElevation="4dp"
+    app:strokeColor="@color/recipe_outline"
+    app:strokeWidth="1dp">
 
-
-
-        <androidx.appcompat.widget.SearchView
-            android:id="@+id/txtBuscarReceta"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:imeOptions="actionSearch"
-            android:inputType="text"
-            android:maxLines="1" />
-
-
+    <androidx.appcompat.widget.SearchView
+        android:id="@+id/txtBuscarReceta"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:imeOptions="actionSearch"
+        android:inputType="text"
+        android:maxLines="1"
+        app:queryHint="Buscar receta" />
 </com.google.android.material.card.MaterialCardView>

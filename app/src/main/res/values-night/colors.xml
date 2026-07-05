@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Paleta oscura de la app Recetario -->
+    <color name="recipe_primary">#FFB17A</color>
+    <color name="recipe_primary_dark">#D66A2A</color>
+    <color name="recipe_secondary">#95D6B0</color>
+    <color name="recipe_background">#17120F</color>
+    <color name="recipe_surface">#241B14</color>
+    <color name="recipe_surface_variant">#342820</color>
+    <color name="recipe_text_primary">#FFF4EA</color>
+    <color name="recipe_text_secondary">#D7C3B4</color>
+    <color name="recipe_outline">#695547</color>
+    <color name="recipe_error">#FFB4AB</color>
+    <color name="recipe_media_placeholder">#110D0B</color>
+</resources>

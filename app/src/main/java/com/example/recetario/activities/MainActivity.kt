@@ -25,7 +25,6 @@ import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
-    // Usamos NavigationBarView para soportar tanto BottomNav como NavigationRail
     private lateinit var navigationBar: NavigationBarView
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,19 +33,17 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
 
-        // El ID es el mismo en ambos layouts (land y portrait)
         navigationBar = findViewById(R.id.bottomNavigation)
         SystemBarUtils.aplicarInsets(findViewById(R.id.main))
 
         configurarNavegacion()
 
         if (savedInstanceState == null) {
+            // Iniciamos el flujo de verificación
             mostrarPantallaInicial()
         } else {
             actualizarInterfazSegunSesion()
         }
-
-        manejarIntentRedireccion(intent)
     }
 
     private fun actualizarInterfazSegunSesion() {
@@ -98,8 +95,13 @@ class MainActivity : AppCompatActivity() {
             }
 
             SessionManager.usuario = usuario
-            cambiarFragmento(HomeFragment(), agregarAlBackStack = false, mostrarMenu = true)
-            navigationBar.selectedItemId = R.id.nav_recetas
+            
+            // IMPORTANTE: Primero verificamos si hay una redirección pendiente antes de cargar Home
+            if (!manejarIntentRedireccion(intent)) {
+                // Solo cargamos Home si no veníamos a ver una receta específica
+                cambiarFragmento(HomeFragment(), agregarAlBackStack = false, mostrarMenu = true)
+                navigationBar.selectedItemId = R.id.nav_recetas
+            }
         }
     }
 
@@ -109,10 +111,14 @@ class MainActivity : AppCompatActivity() {
         manejarIntentRedireccion(intent)
     }
 
-    private fun manejarIntentRedireccion(intent: Intent?) {
-        if (AuthManager.obtenerUsuario() == null) return
+    /**
+     * Procesa el intent para abrir detalles de receta.
+     * @return true si se procesó una redirección, false en caso contrario.
+     */
+    private fun manejarIntentRedireccion(intent: Intent?): Boolean {
+        if (AuthManager.obtenerUsuario() == null || intent == null) return false
 
-        if (intent?.getBooleanExtra("ABRIR_DETALLE", false) == true) {
+        if (intent.getBooleanExtra("ABRIR_DETALLE", false)) {
             val receta = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 intent.getParcelableExtra("EXTRA_RECETA", Recipe::class.java)
             } else {
@@ -126,16 +132,20 @@ class MainActivity : AppCompatActivity() {
                         putParcelable("EXTRA_RECETA", it)
                     }
                 }
+                // Cargamos el detalle con posibilidad de volver atrás al Home
                 cambiarFragmento(fragment, agregarAlBackStack = true, mostrarMenu = true)
                 navigationBar.selectedItemId = R.id.nav_recetas
+                return true
             }
-            return
         }
 
-        if (intent?.getStringExtra("FORZAR_FRAGMENTO") == "Recetas") {
+        if (intent.getStringExtra("FORZAR_FRAGMENTO") == "Recetas") {
             cambiarFragmento(HomeFragment(), agregarAlBackStack = false, mostrarMenu = true)
             navigationBar.selectedItemId = R.id.nav_recetas
+            return true
         }
+        
+        return false
     }
 
     fun cambiarFragmento(

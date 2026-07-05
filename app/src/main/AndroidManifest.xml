@@ -17,7 +17,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Recetario">
         <activity
-            android:name=".Actividades.MainActivity"
+            android:name=".activities.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -26,16 +26,16 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".Actividades.CreateRecipeActivity"
+            android:name=".activities.CreateRecipeActivity"
             android:exported="false" />
         <activity
-            android:name=".Actividades.ProfileActivity"
+            android:name=".activities.ProfileActivity"
             android:exported="false" />
         <activity
-            android:name=".Actividades.EditProfileActivity"
+            android:name=".activities.EditProfileActivity"
             android:exported="false" />
         <activity
-            android:name=".Actividades.ChangePasswordActivity"
+            android:name=".activities.ChangePasswordActivity"
             android:exported="false" />
     </application>
 

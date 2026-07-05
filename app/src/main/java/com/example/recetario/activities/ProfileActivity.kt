@@ -6,6 +6,7 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -13,6 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import coil.load
 import com.example.recetario.R
 import com.example.recetario.utils.SystemBarUtils
+import com.example.recetario.utils.AuthManager
 import com.example.recetario.data.RecipeManager
 import com.example.recetario.data.SavedRecipeManager
 import com.example.recetario.data.UserManager
@@ -30,6 +32,7 @@ class ProfileActivity : AppCompatActivity() {
 
     private lateinit var bottomNavigation: BottomNavigationView
     private lateinit var btnEditarPerfil: Button
+    private lateinit var btnCerrarSesion: Button
     private lateinit var btnTabGuardadas: Button
     private lateinit var btnTabMisRecetas: Button
 
@@ -63,6 +66,7 @@ class ProfileActivity : AppCompatActivity() {
         txtFavoritas = findViewById(R.id.txtFavoritas)
         bottomNavigation = findViewById(R.id.bottomNavigation)
         btnEditarPerfil = findViewById(R.id.btnEditarPerfil)
+        btnCerrarSesion = findViewById(R.id.btnCerrarSesion)
         btnTabGuardadas = findViewById(R.id.btnTabGuardadas)
         btnTabMisRecetas = findViewById(R.id.btnTabMisRecetas)
     }
@@ -96,6 +100,10 @@ class ProfileActivity : AppCompatActivity() {
             startActivity(Intent(this, EditProfileActivity::class.java))
         }
 
+        btnCerrarSesion.setOnClickListener {
+            confirmarCierreSesion()
+        }
+
         btnTabGuardadas.setOnClickListener {
             mostrarFragmentoPerfil(SavedRecipesFragment())
             marcarTabActiva(esGuardadas = true)
@@ -105,6 +113,29 @@ class ProfileActivity : AppCompatActivity() {
             mostrarFragmentoPerfil(MyRecipesFragment())
             marcarTabActiva(esGuardadas = false)
         }
+    }
+
+    /**
+     * Cierra la sesión de Firebase y limpia los datos del usuario en memoria.
+     * Luego regresa a MainActivity, donde se muestra nuevamente el LoginFragment.
+     */
+    private fun confirmarCierreSesion() {
+        AlertDialog.Builder(this)
+            .setTitle("Cerrar sesión")
+            .setMessage("¿Quieres salir de tu cuenta?")
+            .setNegativeButton("Cancelar", null)
+            .setPositiveButton("Cerrar sesión") { _, _ ->
+                AuthManager.cerrarSesion()
+                SessionManager.usuario = null
+
+                val intent = Intent(this, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
+
+                startActivity(intent)
+                finish()
+            }
+            .show()
     }
 
     private fun mostrarFragmentoPerfil(fragment: Fragment) {

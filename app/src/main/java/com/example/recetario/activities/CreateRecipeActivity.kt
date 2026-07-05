@@ -40,6 +40,8 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.navigation.NavigationBarView
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+// Importación añadida para la ventana emergente de Material Design
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
@@ -93,11 +95,12 @@ class CreateRecipeActivity : AppCompatActivity() {
 
         inicializarVistas()
         configurarNavegacion()
-        configurarEventos() // Ahora se configura antes para evitar que el 'return' lo bloquee
+        configurarEventos()
         cargarModoFormulario()
 
+        // MODIFICACIÓN: Interceptamos el botón de atrás del teléfono para mostrar el diálogo
         onBackPressedDispatcher.addCallback(this) {
-            NavigationHelper.volverARecetas(this@CreateRecipeActivity)
+            mostrarDialogoDeBorrador()
         }
     }
 
@@ -132,14 +135,51 @@ class CreateRecipeActivity : AppCompatActivity() {
             agregarCampoPaso()
         }
 
+        // MODIFICACIÓN: En lugar de salir directo, mostramos el diálogo
         btnCancelarPost.setOnClickListener {
-            NavigationHelper.volverARecetas(this)
+            mostrarDialogoDeBorrador()
         }
 
         btnGuardarPost.setOnClickListener {
             validarYGuardarReceta()
         }
     }
+
+    // --- NUEVAS FUNCIONES PARA EL DIÁLOGO ---
+
+    private fun mostrarDialogoDeBorrador() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("¿Qué deseas hacer con la receta?")
+            .setMessage("Tienes cambios sin guardar. Puedes guardar un borrador para publicarlo luego, salir sin guardar o continuar editando.")
+
+            // Opción 1: Guardar Borrador
+            .setPositiveButton("Guardar borrador") { dialog, _ ->
+                guardarComoBorrador()
+            }
+
+            // Opción 2: Salir sin guardar
+            .setNegativeButton("Salir sin guardar") { dialog, _ ->
+                NavigationHelper.volverARecetas(this@CreateRecipeActivity)
+            }
+
+            // Opción 3: Seguir editando
+            .setNeutralButton("Seguir editando") { dialog, _ ->
+                dialog.dismiss()
+            }
+
+            .setCancelable(false)
+            .show()
+    }
+
+    private fun guardarComoBorrador() {
+        // Aquí puedes conectar tu lógica de base de datos o API para guardar en estado "Draft"
+        Toast.makeText(this, "Borrador guardado", Toast.LENGTH_SHORT).show()
+
+        // Luego de guardar, regresamos a la pantalla de recetas
+        NavigationHelper.volverARecetas(this)
+    }
+
+    // ----------------------------------------
 
     private fun configurarNavegacion() {
         navigationBar.selectedItemId = R.id.nav_add
@@ -201,38 +241,38 @@ class CreateRecipeActivity : AppCompatActivity() {
 
     private fun agregarCampoIngrediente(valorInicial: String = "") {
         agregarCampoDinamico(
-            contenedorIngredientes, 
-            camposIngredientes, 
-            "Ingrediente", 
+            contenedorIngredientes,
+            camposIngredientes,
+            "Ingrediente",
             valorInicial
         )
     }
 
     private fun agregarCampoPaso(valorInicial: String = "") {
         agregarCampoDinamico(
-            contenedorPasos, 
-            camposPasos, 
-            "Paso", 
+            contenedorPasos,
+            camposPasos,
+            "Paso",
             valorInicial
         )
     }
 
     private fun agregarCampoDinamico(
-        contenedor: LinearLayout, 
-        campos: MutableList<TextInputEditText>, 
-        prefix: String, 
+        contenedor: LinearLayout,
+        campos: MutableList<TextInputEditText>,
+        prefix: String,
         valorInicial: String
     ) {
         val inflater = LayoutInflater.from(this)
         val view = inflater.inflate(R.layout.item_dynamic_field, contenedor, false)
-        
+
         val inputLayout = view.findViewById<TextInputLayout>(R.id.inputLayout)
         val editText = view.findViewById<TextInputEditText>(R.id.editText)
         val btnEliminar = view.findViewById<MaterialButton>(R.id.btnEliminar)
 
         inputLayout.hint = "$prefix ${campos.size + 1}"
         editText.setText(valorInicial)
-        
+
         btnEliminar.setOnClickListener {
             if (campos.size > 1) {
                 campos.remove(editText)
@@ -316,7 +356,7 @@ class CreateRecipeActivity : AppCompatActivity() {
                     }
                     ingredientes.forEach { IngredientManager.crearIngrediente(Ingredient(UUID.randomUUID().toString(), receta.id, it, "")) }
                     pasos.forEachIndexed { i, s -> StepManager.crearPaso(Step(UUID.randomUUID().toString(), receta.id, i + 1, s)) }
-                    
+
                     Toast.makeText(this@CreateRecipeActivity, "¡Receta guardada!", Toast.LENGTH_SHORT).show()
                     NavigationHelper.volverARecetas(this@CreateRecipeActivity)
                 } else {

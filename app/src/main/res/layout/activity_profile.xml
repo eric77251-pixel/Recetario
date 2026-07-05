@@ -71,7 +71,7 @@
                     android:textColor="@color/recipe_text_primary"
                     android:textSize="24sp"
                     android:textStyle="bold"
-                    tools:text="Kelly Steffany" />
+                    tools:text="Nombre Apellido" />
 
                 <TextView
                     android:id="@+id/txtCorreoUsuario"
@@ -81,7 +81,7 @@
                     android:text="correo@correo.com"
                     android:textColor="@color/recipe_text_secondary"
                     android:textSize="14sp"
-                    tools:text="kelly@example.com" />
+                    tools:text="correo@example.com" />
             </LinearLayout>
         </LinearLayout>
 

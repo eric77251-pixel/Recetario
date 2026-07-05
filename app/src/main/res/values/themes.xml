@@ -4,13 +4,14 @@
         <item name="colorOnPrimary">@color/white</item>
         <item name="colorSecondary">@color/recipe_secondary</item>
         <item name="colorOnSecondary">@color/white</item>
+        <item name="android:windowBackground">@color/recipe_background</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:navigationBarColor">@color/recipe_surface</item>
         <item name="android:windowLightNavigationBar">true</item>
         <item name="android:enforceNavigationBarContrast" tools:targetApi="q">false</item>
         <item name="android:navigationBarDividerColor">@color/recipe_surface</item>
         <item name="android:statusBarColor">@color/recipe_background</item>
-        <item name="android:fontFamily">sans</item>
+        <item name="android:fontFamily">sans-serif</item>
     </style>
 
     <style name="Theme.Recetario" parent="Base.Theme.Recetario" />

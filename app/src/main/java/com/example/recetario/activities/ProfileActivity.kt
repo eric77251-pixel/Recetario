@@ -43,17 +43,24 @@ class ProfileActivity : AppCompatActivity() {
     private lateinit var txtCantidadRecetas: TextView
     private lateinit var txtFavoritas: TextView
 
+    // Vistas de las pestañas
     private lateinit var tabGuardadas: LinearLayout
     private lateinit var tabMisRecetas: LinearLayout
+    private lateinit var tabBorradores: LinearLayout // NUEVO
+
     private lateinit var txtTabGuardadas: TextView
     private lateinit var txtTabMisRecetas: TextView
+    private lateinit var txtTabBorradores: TextView // NUEVO
+
     private lateinit var indicatorGuardadas: View
     private lateinit var indicatorMisRecetas: View
+    private lateinit var indicatorBorradores: View // NUEVO
+
     private lateinit var viewPagerProfile: ViewPager2
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         if (AuthManager.obtenerUsuario() == null) {
             val intent = Intent(this, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -82,12 +89,19 @@ class ProfileActivity : AppCompatActivity() {
         navigationBar = findViewById(R.id.bottomNavigation)
         btnEditarPerfil = findViewById(R.id.btnEditarPerfil)
         btnCerrarSesion = findViewById(R.id.btnCerrarSesion)
+
         tabGuardadas = findViewById(R.id.tabGuardadas)
         tabMisRecetas = findViewById(R.id.tabMisRecetas)
+        tabBorradores = findViewById(R.id.tabBorradores) // NUEVO
+
         txtTabGuardadas = findViewById(R.id.txtTabGuardadas)
         txtTabMisRecetas = findViewById(R.id.txtTabMisRecetas)
+        txtTabBorradores = findViewById(R.id.txtTabBorradores) // NUEVO
+
         indicatorGuardadas = findViewById(R.id.indicatorGuardadas)
         indicatorMisRecetas = findViewById(R.id.indicatorMisRecetas)
+        indicatorBorradores = findViewById(R.id.indicatorBorradores) // NUEVO
+
         viewPagerProfile = findViewById(R.id.viewPagerProfile)
     }
 
@@ -124,11 +138,16 @@ class ProfileActivity : AppCompatActivity() {
         tabMisRecetas.setOnClickListener {
             viewPagerProfile.currentItem = 1
         }
+
+        // NUEVO: Evento para la pestaña de borradores
+        tabBorradores.setOnClickListener {
+            viewPagerProfile.currentItem = 2
+        }
     }
 
     private fun configurarSeccionesDeslizables() {
         viewPagerProfile.adapter = ProfileSectionsPagerAdapter(this)
-        viewPagerProfile.offscreenPageLimit = 2
+        viewPagerProfile.offscreenPageLimit = 3 // MODIFICADO: Ahora mantenemos 3 pantallas cargadas
 
         viewPagerProfile.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
@@ -144,16 +163,38 @@ class ProfileActivity : AppCompatActivity() {
         val colorActivo = ContextCompat.getColor(this, R.color.recipe_primary)
         val colorInactivo = ContextCompat.getColor(this, R.color.recipe_text_secondary)
 
-        val guardadasActiva = position == 0
+        // 1. Restablecemos todos los textos y opacidades a inactivo por defecto
+        txtTabGuardadas.setTextColor(colorInactivo)
+        txtTabMisRecetas.setTextColor(colorInactivo)
+        txtTabBorradores.setTextColor(colorInactivo)
 
-        txtTabGuardadas.setTextColor(if (guardadasActiva) colorActivo else colorInactivo)
-        txtTabMisRecetas.setTextColor(if (guardadasActiva) colorInactivo else colorActivo)
+        txtTabGuardadas.alpha = 0.72f
+        txtTabMisRecetas.alpha = 0.72f
+        txtTabBorradores.alpha = 0.72f
 
-        txtTabGuardadas.alpha = if (guardadasActiva) 1f else 0.72f
-        txtTabMisRecetas.alpha = if (guardadasActiva) 0.72f else 1f
+        // 2. Ocultamos todas las barras indicadoras
+        indicatorGuardadas.visibility = View.INVISIBLE
+        indicatorMisRecetas.visibility = View.INVISIBLE
+        indicatorBorradores.visibility = View.INVISIBLE
 
-        indicatorGuardadas.visibility = if (guardadasActiva) View.VISIBLE else View.INVISIBLE
-        indicatorMisRecetas.visibility = if (guardadasActiva) View.INVISIBLE else View.VISIBLE
+        // 3. Activamos solo la pestaña que corresponde a la posición actual
+        when (position) {
+            0 -> {
+                txtTabGuardadas.setTextColor(colorActivo)
+                txtTabGuardadas.alpha = 1f
+                indicatorGuardadas.visibility = View.VISIBLE
+            }
+            1 -> {
+                txtTabMisRecetas.setTextColor(colorActivo)
+                txtTabMisRecetas.alpha = 1f
+                indicatorMisRecetas.visibility = View.VISIBLE
+            }
+            2 -> {
+                txtTabBorradores.setTextColor(colorActivo)
+                txtTabBorradores.alpha = 1f
+                indicatorBorradores.visibility = View.VISIBLE
+            }
+        }
     }
 
     private fun confirmarCierreSesion() {

@@ -12,8 +12,10 @@ data class Recipe(
 
  @SerialName("usuario_id")
  var usuarioId: String = "",
+
  @SerialName("nombre_usuario")
  var nombreUsuario: String = "",
+
  var nombre: String = "",
 
  var descripcion: String = "",
@@ -22,7 +24,10 @@ data class Recipe(
  var imagenUrl: String = "",
 
  @SerialName("fecha_creacion")
- var fechaCreacion: String = ""
+ var fechaCreacion: String = "",
+
+ // 1. NUEVO: Agregamos el estado con valor "publicado" por defecto
+ var estado: String = "publicado"
 
 ) : Parcelable {
 
@@ -33,7 +38,9 @@ data class Recipe(
   parcel.readString() ?: "",
   parcel.readString() ?: "",
   parcel.readString() ?: "",
-  parcel.readString() ?: ""
+  parcel.readString() ?: "",
+  // 2. NUEVO: Leemos el estado al desempaquetar (si es nulo, será "publicado")
+  parcel.readString() ?: "publicado"
  )
 
  override fun writeToParcel(parcel: Parcel, flags: Int) {
@@ -44,6 +51,8 @@ data class Recipe(
   parcel.writeString(descripcion)
   parcel.writeString(imagenUrl)
   parcel.writeString(fechaCreacion)
+  // 3. NUEVO: Guardamos el estado al empaquetar
+  parcel.writeString(estado)
  }
 
  override fun describeContents(): Int = 0

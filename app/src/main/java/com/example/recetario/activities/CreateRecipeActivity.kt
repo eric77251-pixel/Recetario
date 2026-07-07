@@ -24,6 +24,7 @@ import androidx.lifecycle.lifecycleScope
 import coil.load
 import com.example.recetario.R
 import com.example.recetario.data.IngredientManager
+import com.example.recetario.data.LocalDraftManager
 import com.example.recetario.data.RecipeManager
 import com.example.recetario.data.StepManager
 import com.example.recetario.model.Ingredient
@@ -35,16 +36,15 @@ import com.example.recetario.utils.NetworkUtils
 import com.example.recetario.utils.PermissionManager
 import com.example.recetario.utils.SessionManager
 import com.example.recetario.utils.SystemBarUtils
-import com.example.recetario.utils.ValidationUtils
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.navigation.NavigationBarView
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
-// Importación añadida para la ventana emergente de Material Design
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.util.UUID
 import kotlin.math.min
 
@@ -80,7 +80,6 @@ class CreateRecipeActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         if (AuthManager.obtenerUsuario() == null) {
             val intent = Intent(this, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -98,7 +97,6 @@ class CreateRecipeActivity : AppCompatActivity() {
         configurarEventos()
         cargarModoFormulario()
 
-        // MODIFICACIÓN: Interceptamos el botón de atrás del teléfono para mostrar el diálogo
         onBackPressedDispatcher.addCallback(this) {
             mostrarDialogoDeBorrador()
         }
@@ -121,65 +119,68 @@ class CreateRecipeActivity : AppCompatActivity() {
     }
 
     private fun configurarEventos() {
-        btnPostImagen.setOnClickListener {
-            if (permissionManager.permisosMultimedia(100)) {
-                abrirGaleria()
-            }
-        }
-
-        btnAgregarIngrediente.setOnClickListener {
-            agregarCampoIngrediente()
-        }
-
-        btnAgregarPaso.setOnClickListener {
-            agregarCampoPaso()
-        }
-
-        // MODIFICACIÓN: En lugar de salir directo, mostramos el diálogo
-        btnCancelarPost.setOnClickListener {
-            mostrarDialogoDeBorrador()
-        }
-
-        btnGuardarPost.setOnClickListener {
-            validarYGuardarReceta()
-        }
+        btnPostImagen.setOnClickListener { if (permissionManager.permisosMultimedia(100)) abrirGaleria() }
+        btnAgregarIngrediente.setOnClickListener { agregarCampoIngrediente() }
+        btnAgregarPaso.setOnClickListener { agregarCampoPaso() }
+        btnCancelarPost.setOnClickListener { mostrarDialogoDeBorrador() }
+        btnGuardarPost.setOnClickListener { validarYGuardarReceta() }
     }
-
-    // --- NUEVAS FUNCIONES PARA EL DIÁLOGO ---
 
     private fun mostrarDialogoDeBorrador() {
         MaterialAlertDialogBuilder(this)
             .setTitle("¿Qué deseas hacer con la receta?")
-            .setMessage("Tienes cambios sin guardar. Puedes guardar un borrador para publicarlo luego, salir sin guardar o continuar editando.")
-
-            // Opción 1: Guardar Borrador
-            .setPositiveButton("Guardar borrador") { dialog, _ ->
-                guardarComoBorrador()
-            }
-
-            // Opción 2: Salir sin guardar
-            .setNegativeButton("Salir sin guardar") { dialog, _ ->
-                NavigationHelper.volverARecetas(this@CreateRecipeActivity)
-            }
-
-            // Opción 3: Seguir editando
-            .setNeutralButton("Seguir editando") { dialog, _ ->
-                dialog.dismiss()
-            }
-
+            .setMessage("Tienes cambios sin guardar. Puedes guardar un borrador para publicarlo luego o salir sin guardar.")
+            .setPositiveButton("Guardar borrador (Local)") { _, _ -> guardarComoBorrador() }
+            .setNegativeButton("Salir sin guardar") { _, _ -> NavigationHelper.volverARecetas(this@CreateRecipeActivity) }
+            .setNeutralButton("Seguir editando") { dialog, _ -> dialog.dismiss() }
             .setCancelable(false)
             .show()
     }
 
     private fun guardarComoBorrador() {
-        // Aquí puedes conectar tu lógica de base de datos o API para guardar en estado "Draft"
-        Toast.makeText(this, "Borrador guardado", Toast.LENGTH_SHORT).show()
+        val nombre = etPostNombre.text.toString().trim()
+        val descripcion = etPostDescripcion.text.toString().trim()
+        val ingredientes = camposIngredientes.map { it.text.toString().trim() }.filter { it.isNotBlank() }
+        val pasos = camposPasos.map { it.text.toString().trim() }.filter { it.isNotBlank() }
 
-        // Luego de guardar, regresamos a la pantalla de recetas
-        NavigationHelper.volverARecetas(this)
+        if (nombre.isEmpty()) {
+            Toast.makeText(this, "Escribe al menos el nombre para guardar el borrador", Toast.LENGTH_SHORT).show()
+            etPostNombre.error = "Falta el nombre"
+            return
+        }
+
+        btnCancelarPost.isEnabled = false
+        Toast.makeText(this, "Guardando en tu teléfono...", Toast.LENGTH_SHORT).show()
+
+        lifecycleScope.launch {
+            try {
+                val receta = Recipe(
+                    id = recetaEnEdicion?.id ?: UUID.randomUUID().toString(),
+                    usuarioId = AuthManager.obtenerUsuario()?.uid.orEmpty(),
+                    nombreUsuario = "${SessionManager.usuario?.nombre} ${SessionManager.usuario?.apellido}",
+                    nombre = nombre,
+                    descripcion = descripcion,
+                    imagenUrl = recetaEnEdicion?.imagenUrl ?: "",
+                    estado = "borrador_local" // ESTADO CLAVE
+                )
+
+                LocalDraftManager.guardarBorrador(
+                    this@CreateRecipeActivity,
+                    receta,
+                    ingredientes,
+                    pasos,
+                    selectedMediaUri
+                )
+
+                Toast.makeText(this@CreateRecipeActivity, "Borrador guardado localmente", Toast.LENGTH_SHORT).show()
+                NavigationHelper.volverARecetas(this@CreateRecipeActivity)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                btnCancelarPost.isEnabled = true
+                Toast.makeText(this@CreateRecipeActivity, "Error al guardar localmente", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
-
-    // ----------------------------------------
 
     private fun configurarNavegacion() {
         navigationBar.selectedItemId = R.id.nav_add
@@ -205,74 +206,63 @@ class CreateRecipeActivity : AppCompatActivity() {
             return
         }
 
-        lblNuevaReceta.text = "Editar receta"
-        btnGuardarPost.text = "Guardar cambios"
+        lblNuevaReceta.text = if (receta.estado == "borrador_local") "Editar borrador" else "Editar receta"
+        btnGuardarPost.text = if (receta.estado == "borrador_local") "Publicar borrador" else "Guardar cambios"
+
         etPostNombre.setText(receta.nombre)
         etPostDescripcion.setText(receta.descripcion)
 
         if (receta.imagenUrl.isNotBlank()) {
             tvMediaHint.visibility = View.GONE
             imagePreview.visibility = View.VISIBLE
-            imagePreview.load(receta.imagenUrl)
+            // Coil sabe cargar archivos locales automáticamente pasándole la ruta
+            imagePreview.load(File(receta.imagenUrl).takeIf { it.exists() } ?: receta.imagenUrl)
             btnPostImagen.text = "Cambiar imagen"
         }
 
         lifecycleScope.launch {
-            val ingredientes = IngredientManager.obtenerIngredientes(receta.id)
-            val pasos = StepManager.obtenerPasos(receta.id)
+            val ingredientesNombres: List<String>
+            val pasosDescripciones: List<String>
+
+            // SI ES BORRADOR LOCAL, BUSCA EN EL TELÉFONO. SI ES PUBLICACIÓN, BUSCA EN FIREBASE.
+            if (receta.estado == "borrador_local") {
+                val draftData = LocalDraftManager.obtenerTodos(this@CreateRecipeActivity).find { it.recipe.id == receta.id }
+                ingredientesNombres = draftData?.ingredientes ?: emptyList()
+                pasosDescripciones = draftData?.pasos ?: emptyList()
+            } else {
+                ingredientesNombres = IngredientManager.obtenerIngredientes(receta.id).map { it.nombre }
+                pasosDescripciones = StepManager.obtenerPasos(receta.id).map { it.descripcion }
+            }
 
             contenedorIngredientes.removeAllViews()
             camposIngredientes.clear()
-            if (ingredientes.isEmpty()) {
-                agregarCampoIngrediente()
-            } else {
-                ingredientes.forEach { agregarCampoIngrediente(it.nombre) }
-            }
+            if (ingredientesNombres.isEmpty()) agregarCampoIngrediente()
+            else ingredientesNombres.forEach { agregarCampoIngrediente(it) }
 
             contenedorPasos.removeAllViews()
             camposPasos.clear()
-            if (pasos.isEmpty()) {
-                agregarCampoPaso()
-            } else {
-                pasos.forEach { agregarCampoPaso(it.descripcion) }
-            }
+            if (pasosDescripciones.isEmpty()) agregarCampoPaso()
+            else pasosDescripciones.forEach { agregarCampoPaso(it) }
         }
     }
 
     private fun agregarCampoIngrediente(valorInicial: String = "") {
-        agregarCampoDinamico(
-            contenedorIngredientes,
-            camposIngredientes,
-            "Ingrediente",
-            valorInicial
-        )
+        agregarCampoDinamico(contenedorIngredientes, camposIngredientes, "Ingrediente", valorInicial)
     }
 
     private fun agregarCampoPaso(valorInicial: String = "") {
-        agregarCampoDinamico(
-            contenedorPasos,
-            camposPasos,
-            "Paso",
-            valorInicial
-        )
+        agregarCampoDinamico(contenedorPasos, camposPasos, "Paso", valorInicial)
     }
 
-    private fun agregarCampoDinamico(
-        contenedor: LinearLayout,
-        campos: MutableList<TextInputEditText>,
-        prefix: String,
-        valorInicial: String
-    ) {
+    private fun agregarCampoDinamico(contenedor: LinearLayout, campos: MutableList<TextInputEditText>, prefix: String, valorInicial: String) {
         val inflater = LayoutInflater.from(this)
         val view = inflater.inflate(R.layout.item_dynamic_field, contenedor, false)
-
         val inputLayout = view.findViewById<TextInputLayout>(R.id.inputLayout)
         val editText = view.findViewById<TextInputEditText>(R.id.editText)
         val btnEliminar = view.findViewById<MaterialButton>(R.id.btnEliminar)
 
         inputLayout.hint = "$prefix ${campos.size + 1}"
         editText.setText(valorInicial)
-
         btnEliminar.setOnClickListener {
             if (campos.size > 1) {
                 campos.remove(editText)
@@ -282,29 +272,22 @@ class CreateRecipeActivity : AppCompatActivity() {
                 editText.text?.clear()
             }
         }
-
         contenedor.addView(view)
         campos.add(editText)
     }
 
     private fun actualizarHints(campos: List<TextInputEditText>, prefix: String) {
-        campos.forEachIndexed { index, editText ->
-            val layout = editText.parent.parent as? TextInputLayout
-            layout?.hint = "$prefix ${index + 1}"
-        }
+        campos.forEachIndexed { index, editText -> (editText.parent.parent as? TextInputLayout)?.hint = "$prefix ${index + 1}" }
     }
 
-    private fun abrirGaleria() {
-        pickMedia.launch("image/*")
-    }
+    private fun abrirGaleria() { pickMedia.launch("image/*") }
 
     private fun mostrarVistaPrevia(uri: Uri) {
         tvMediaHint.visibility = View.GONE
         imagePreview.visibility = View.VISIBLE
         btnPostImagen.text = "Cambiar imagen"
         val bitmap = ajustarImagen(uri, 900)
-        if (bitmap != null) imagePreview.setImageBitmap(bitmap)
-        else imagePreview.load(uri)
+        if (bitmap != null) imagePreview.setImageBitmap(bitmap) else imagePreview.load(uri)
     }
 
     private fun validarYGuardarReceta() {
@@ -320,14 +303,10 @@ class CreateRecipeActivity : AppCompatActivity() {
         if (nombre.isEmpty()) { etPostNombre.error = "Falta el nombre"; return }
         if (ingredientes.isEmpty()) { Toast.makeText(this, "Añade al menos un ingrediente", Toast.LENGTH_SHORT).show(); return }
         if (pasos.isEmpty()) { Toast.makeText(this, "Añade al menos un paso", Toast.LENGTH_SHORT).show(); return }
-
-        if (!NetworkUtils.hayConexion(this)) {
-            Toast.makeText(this, "Sin conexión", Toast.LENGTH_SHORT).show()
-            return
-        }
+        if (!NetworkUtils.hayConexion(this)) { Toast.makeText(this, "Sin conexión", Toast.LENGTH_SHORT).show(); return }
 
         btnGuardarPost.isEnabled = false
-        Toast.makeText(this, "Guardando receta...", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "Publicando receta en Firebase...", Toast.LENGTH_SHORT).show()
 
         lifecycleScope.launch {
             try {
@@ -340,27 +319,39 @@ class CreateRecipeActivity : AppCompatActivity() {
 
                 val receta = Recipe(
                     id = recetaEnEdicion?.id ?: UUID.randomUUID().toString(),
-                    usuarioId = recetaEnEdicion?.usuarioId ?: AuthManager.obtenerUsuario()?.uid.orEmpty(),
-                    nombreUsuario = recetaEnEdicion?.nombreUsuario ?: "${SessionManager.usuario?.nombre} ${SessionManager.usuario?.apellido}",
+                    usuarioId = AuthManager.obtenerUsuario()?.uid.orEmpty(),
+                    nombreUsuario = "${SessionManager.usuario?.nombre} ${SessionManager.usuario?.apellido}",
                     nombre = nombre,
                     descripcion = descripcion,
-                    imagenUrl = urlImagen
+                    imagenUrl = urlImagen,
+                    estado = "publicado" // AHORA SÍ SE CONVIERTE EN PÚBLICA
                 )
 
-                val exito = if (recetaEnEdicion == null) RecipeManager.crearReceta(receta) != null else RecipeManager.actualizarReceta(receta)
+                // Si era borrador local, RecipeManager.actualizar fallaría porque no existe en Firebase. Lo creamos.
+                val exito = if (recetaEnEdicion == null || recetaEnEdicion?.estado == "borrador_local") {
+                    RecipeManager.crearReceta(receta) != null
+                } else {
+                    RecipeManager.actualizarReceta(receta)
+                }
 
                 if (exito) {
-                    if (recetaEnEdicion != null) {
+                    // Si ya existía en Firebase, borramos lo viejo
+                    if (recetaEnEdicion != null && recetaEnEdicion?.estado != "borrador_local") {
                         IngredientManager.eliminarIngredientes(receta.id)
                         StepManager.eliminarPasos(receta.id)
                     }
                     ingredientes.forEach { IngredientManager.crearIngrediente(Ingredient(UUID.randomUUID().toString(), receta.id, it, "")) }
                     pasos.forEachIndexed { i, s -> StepManager.crearPaso(Step(UUID.randomUUID().toString(), receta.id, i + 1, s)) }
 
-                    Toast.makeText(this@CreateRecipeActivity, "¡Receta guardada!", Toast.LENGTH_SHORT).show()
+                    // ¡NUEVO! Limpieza: Borrar el archivo local porque ya se fue a la nube
+                    if (recetaEnEdicion?.estado == "borrador_local") {
+                        LocalDraftManager.eliminarBorrador(this@CreateRecipeActivity, receta.id)
+                    }
+
+                    Toast.makeText(this@CreateRecipeActivity, "¡Receta publicada!", Toast.LENGTH_SHORT).show()
                     NavigationHelper.volverARecetas(this@CreateRecipeActivity)
                 } else {
-                    Toast.makeText(this@CreateRecipeActivity, "Error al guardar", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@CreateRecipeActivity, "Error al publicar", Toast.LENGTH_SHORT).show()
                     btnGuardarPost.isEnabled = true
                 }
             } catch (e: Exception) {
@@ -371,21 +362,28 @@ class CreateRecipeActivity : AppCompatActivity() {
     }
 
     private suspend fun obtenerUrlImagen(): String? {
-        val uri = selectedMediaUri ?: return recetaEnEdicion?.imagenUrl
-        val bitmap = ajustarImagen(uri, 900) ?: return null
-        val stream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream)
-        val nombre = "receta_${System.currentTimeMillis()}.jpg"
-        return RecipeManager.subirImagen(nombre, stream.toByteArray())
+        if (selectedMediaUri != null) {
+            // Sube la foto nueva
+            val bitmap = ajustarImagen(selectedMediaUri!!, 900) ?: return null
+            val stream = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream)
+            return RecipeManager.subirImagen("receta_${System.currentTimeMillis()}.jpg", stream.toByteArray())
+
+        } else if (recetaEnEdicion?.estado == "borrador_local" && recetaEnEdicion?.imagenUrl?.isNotBlank() == true) {
+            // INTERCEPCIÓN: Subimos la foto guardada localmente hacia Supabase
+            val file = File(recetaEnEdicion!!.imagenUrl)
+            if (file.exists()) {
+                val bytes = file.readBytes()
+                return RecipeManager.subirImagen("receta_${System.currentTimeMillis()}.jpg", bytes)
+            }
+        }
+        return recetaEnEdicion?.imagenUrl
     }
 
     private fun ajustarImagen(uri: Uri, maxSize: Int): Bitmap? {
         return try {
-            val original = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                ImageDecoder.decodeBitmap(ImageDecoder.createSource(contentResolver, uri))
-            } else {
-                @Suppress("DEPRECATION") MediaStore.Images.Media.getBitmap(contentResolver, uri)
-            }
+            val original = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) ImageDecoder.decodeBitmap(ImageDecoder.createSource(contentResolver, uri))
+            else @Suppress("DEPRECATION") MediaStore.Images.Media.getBitmap(contentResolver, uri)
             val ratio = min(maxSize.toFloat() / original.width, maxSize.toFloat() / original.height).coerceAtMost(1f)
             Bitmap.createScaledBitmap(original, (original.width * ratio).toInt(), (original.height * ratio).toInt(), true)
         } catch (e: Exception) { null }
@@ -393,19 +391,14 @@ class CreateRecipeActivity : AppCompatActivity() {
 
     private fun obtenerRecetaDesdeIntent(): Recipe? {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intent.getParcelableExtra("EXTRA_RECETA_EDITAR", Recipe::class.java)
-                ?: intent.getParcelableExtra("EXTRA_RECETA", Recipe::class.java)
+            intent.getParcelableExtra("EXTRA_RECETA_EDITAR", Recipe::class.java) ?: intent.getParcelableExtra("EXTRA_RECETA", Recipe::class.java)
         } else {
-            @Suppress("DEPRECATION")
-            intent.getParcelableExtra("EXTRA_RECETA_EDITAR")
-                ?: intent.getParcelableExtra("EXTRA_RECETA")
+            @Suppress("DEPRECATION") intent.getParcelableExtra("EXTRA_RECETA_EDITAR") ?: intent.getParcelableExtra("EXTRA_RECETA")
         }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == 100 && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            abrirGaleria()
-        }
+        if (requestCode == 100 && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) abrirGaleria()
     }
 }

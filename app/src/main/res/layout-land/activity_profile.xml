@@ -160,6 +160,17 @@
                 <TextView android:id="@+id/txtTabMisRecetas" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="MIS RECETAS" android:textStyle="bold" android:textSize="13sp" />
                 <View android:id="@+id/indicatorMisRecetas" android:layout_width="60dp" android:layout_height="3dp" android:layout_marginTop="6dp" android:background="@color/recipe_primary" android:visibility="invisible" />
             </LinearLayout>
+            <LinearLayout
+                android:id="@+id/tabBorradores"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:paddingVertical="14dp">
+                <TextView android:id="@+id/txtTabBorradores" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="BORRADORES" android:textStyle="bold" android:textSize="13sp" />
+                <View android:id="@+id/indicatorBorradores" android:layout_width="60dp" android:layout_height="3dp" android:layout_marginTop="6dp" android:background="@color/recipe_primary" android:visibility="invisible" />
+            </LinearLayout>
         </LinearLayout>
 
         <androidx.viewpager2.widget.ViewPager2

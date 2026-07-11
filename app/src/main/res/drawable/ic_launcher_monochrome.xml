@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Contorno principal de la nube (Gorro) -->
+    <path
+        android:strokeColor="#FF000000"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M31,58 C24,58 20,53 20,47 C20,41 24,36 30,35 C32,29 37,25 43,25 C47,25 51,27 54,30 C57,26 62,24 67,24 C74,24 80,29 82,36 C88,37 92,42 92,48 C92,55 87,60 79,60 L31,60 Z" />
+
+    <!-- DETALLE INTERNO: La parte clara del gorro de color -->
+    <path
+        android:strokeColor="#FF000000"
+        android:strokeWidth="1.2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M34,56 C29,56 26,52 26,47 C26,43 29,39 34,38 C36,33 40,31 44,31 C48,31 51,33 53,36 C56,32 60,30 65,30 C70,30 75,34 76,39 C81,40 84,44 84,48 C84,53 80,56 75,56 L34,56 Z" />
+
+    <!-- Contorno de la base del gorro -->
+    <path
+        android:strokeColor="#FF000000"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M34,60 L74,60 C76,60 78,62 78,64 L78,72 C78,74 76,76 74,76 L34,76 C32,76 30,74 30,72 L30,64 C30,62 32,60 34,60 Z" />
+
+    <!-- Línea decorativa de la banda -->
+    <path
+        android:strokeColor="#FF000000"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:pathData="M34,68 L74,68" />
+
+    <!-- Corazón central -->
+    <path
+        android:strokeColor="#FF000000"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#FF000000"
+        android:pathData="M54,66 C54,66 47,61.5 44,58.5 C41.5,56 41.5,52 44.5,50 C47,48.3 50,49.2 52,51.4 C52.8,52.2 53.4,53 54,53.8 C54.6,53 55.2,52.2 56,51.4 C58,49.2 61,48.3 63.5,50 C66.5,52 66.5,56 64,58.5 C61,61.5 54,66 54,66 Z" />
+
+    <!-- DETALLE INTERNO: Brillo del corazón -->
+    <path
+        android:strokeColor="#FF000000"
+        android:strokeWidth="1"
+        android:strokeLineCap="round"
+        android:pathData="M50,52.5 C50.8,51.8 51.6,51.6 52.4,52.1" />
+
+</vector>

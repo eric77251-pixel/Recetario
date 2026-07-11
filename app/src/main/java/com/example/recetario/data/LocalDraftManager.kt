@@ -6,11 +6,13 @@ import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
+import com.example.recetario.model.Ingredient
 import com.example.recetario.model.Recipe
-import com.google.firebase.auth.FirebaseAuth // Importación vital para saber quién está usando la app
+import com.example.recetario.model.Step
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.FileOutputStream
@@ -19,8 +21,8 @@ import kotlin.math.min
 @Serializable
 data class DraftData(
     val recipe: Recipe,
-    val ingredientes: List<String>,
-    val pasos: List<String>
+    val ingredientes: List<Ingredient>,
+    val pasos: List<Step>
 )
 
 object LocalDraftManager {
@@ -28,7 +30,6 @@ object LocalDraftManager {
 
     private val jsonParser = Json { ignoreUnknownKeys = true }
 
-    // NUEVA FUNCIÓN: Crea una clave única o "cajón" para cada cuenta que inicie sesión
     private fun getKeyUsuario(): String {
         val usuarioId = FirebaseAuth.getInstance().currentUser?.uid ?: "usuario_desconocido"
         return "borradores_$usuarioId"
@@ -37,8 +38,8 @@ object LocalDraftManager {
     fun guardarBorrador(
         context: Context,
         recipe: Recipe,
-        ingredientes: List<String>,
-        pasos: List<String>,
+        ingredientes: List<Ingredient>,
+        pasos: List<Step>,
         uriImagenOriginal: Uri?
     ) {
         if (uriImagenOriginal != null) {
@@ -56,13 +57,11 @@ object LocalDraftManager {
         }
 
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        // Usamos la clave única del usuario para guardar
         prefs.edit().putString(getKeyUsuario(), jsonParser.encodeToString(borradores)).apply()
     }
 
     fun obtenerTodos(context: Context): List<DraftData> {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        // Usamos la clave única del usuario para leer
         val jsonString = prefs.getString(getKeyUsuario(), null) ?: return emptyList()
         return try {
             jsonParser.decodeFromString(jsonString)
@@ -81,7 +80,6 @@ object LocalDraftManager {
 
         borradores.removeAll { it.recipe.id == id }
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        // Usamos la clave única del usuario para sobrescribir (borrar)
         prefs.edit().putString(getKeyUsuario(), jsonParser.encodeToString(borradores)).apply()
     }
 

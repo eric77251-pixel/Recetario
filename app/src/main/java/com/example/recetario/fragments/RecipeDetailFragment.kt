@@ -2,13 +2,16 @@ package com.example.recetario.fragments
 
 import android.app.AlertDialog
 import android.content.Intent
+import android.graphics.Paint
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CheckBox
 import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.addCallback
@@ -18,11 +21,13 @@ import coil.load
 import com.example.recetario.R
 import com.example.recetario.activities.CreateRecipeActivity
 import com.example.recetario.activities.MainActivity
+import com.example.recetario.data.ChecklistManager
 import com.example.recetario.data.IngredientManager
 import com.example.recetario.data.RecipeManager
 import com.example.recetario.data.SavedRecipeManager
 import com.example.recetario.data.StepManager
 import com.example.recetario.data.UserManager
+import com.example.recetario.model.Ingredient
 import com.example.recetario.model.Recipe
 import com.example.recetario.model.SavedRecipe
 import com.example.recetario.utils.NetworkUtils
@@ -39,7 +44,9 @@ class RecipeDetailFragment : Fragment() {
     private lateinit var txtNombre: TextView
     private lateinit var txtUsuario: TextView
     private lateinit var txtDescripcion: TextView
-    private lateinit var txtIngredientes: TextView
+    private lateinit var contenedorChecklist: LinearLayout
+    private lateinit var tvProgress: TextView
+    private lateinit var btnResetChecklist: MaterialButton
     private lateinit var txtProceso: TextView
     private lateinit var btnFavorito: MaterialButton
     private lateinit var btnVolverDetalle: MaterialButton
@@ -49,6 +56,7 @@ class RecipeDetailFragment : Fragment() {
 
     private var esFavorito = false
     private var recetaActual: Recipe? = null
+    private val listaIngredientes = mutableListOf<Ingredient>()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -61,7 +69,9 @@ class RecipeDetailFragment : Fragment() {
         txtNombre = view.findViewById(R.id.txtNombre)
         txtUsuario = view.findViewById(R.id.txtUsuario)
         txtDescripcion = view.findViewById(R.id.txtDescripcion)
-        txtIngredientes = view.findViewById(R.id.txtIngredientes)
+        contenedorChecklist = view.findViewById(R.id.contenedorChecklist)
+        tvProgress = view.findViewById(R.id.tvProgress)
+        btnResetChecklist = view.findViewById(R.id.btnResetChecklist)
         txtProceso = view.findViewById(R.id.txtProceso)
         btnFavorito = view.findViewById(R.id.btnFavorito)
         btnVolverDetalle = view.findViewById(R.id.btnVolverDetalle)
@@ -100,9 +110,6 @@ class RecipeDetailFragment : Fragment() {
         }
     }
 
-    /**
-     * Carga información relacionada de Firebase: autor, ingredientes, pasos y favorito.
-     */
     private fun cargarDatosBase(receta: Recipe) {
         val usuarioActual = FirebaseAuth.getInstance().currentUser
 
@@ -127,16 +134,18 @@ class RecipeDetailFragment : Fragment() {
             }
 
             val ingredientes = IngredientManager.obtenerIngredientes(receta.id)
-            txtIngredientes.text = if (ingredientes.isNotEmpty()) {
-                ingredientes.joinToString("\n") { "• ${it.nombre}" }
-            } else {
-                "No hay ingredientes disponibles."
-            }
+            listaIngredientes.clear()
+            listaIngredientes.addAll(ingredientes)
+            actualizarChecklist()
 
             val pasos = StepManager.obtenerPasos(receta.id)
             txtProceso.text = if (pasos.isNotEmpty()) {
                 pasos.joinToString("\n\n") { paso ->
-                    "${paso.numero}. ${paso.descripcion}"
+                    var texto = "${paso.numero}. ${paso.descripcion}"
+                    if (paso.tiempoMinutos > 0) {
+                        texto += " (${paso.tiempoMinutos} min)"
+                    }
+                    texto
                 }
             } else {
                 "No hay pasos disponibles."
@@ -146,6 +155,61 @@ class RecipeDetailFragment : Fragment() {
                 esFavorito = SavedRecipeManager.esFavorito(usuarioActual.uid, receta.id)
                 actualizarBotonFavorito()
             }
+        }
+    }
+
+    private fun actualizarChecklist() {
+        contenedorChecklist.removeAllViews()
+        val inflater = LayoutInflater.from(requireContext())
+        var checkedCount = 0
+
+        listaIngredientes.forEach { ingredient ->
+            val itemView = inflater.inflate(R.layout.item_ingredient_checklist, contenedorChecklist, false)
+            val checkBox = itemView.findViewById<CheckBox>(R.id.cbIngredient)
+            val tvIngredient = itemView.findViewById<TextView>(R.id.tvIngredientText)
+
+            val isChecked = ChecklistManager.isIngredientChecked(requireContext(), recetaActual?.id ?: "", ingredient.id)
+            checkBox.isChecked = isChecked
+
+            val displayStr = StringBuilder("• ")
+            if (ingredient.cantidad.isNotBlank()) displayStr.append("${ingredient.cantidad} ")
+            if (ingredient.unidad.isNotBlank()) displayStr.append("${ingredient.unidad} ")
+            displayStr.append(ingredient.nombre)
+            tvIngredient.text = displayStr.toString()
+
+            actualizarEstiloIngrediente(tvIngredient, isChecked)
+            if (isChecked) checkedCount++
+
+            checkBox.setOnCheckedChangeListener { _, checked ->
+                ChecklistManager.setIngredientChecked(requireContext(), recetaActual?.id ?: "", ingredient.id, checked)
+                actualizarEstiloIngrediente(tvIngredient, checked)
+                actualizarProgreso()
+            }
+
+            itemView.setOnClickListener { checkBox.toggle() }
+
+            contenedorChecklist.addView(itemView)
+        }
+        tvProgress.text = "$checkedCount de ${listaIngredientes.size}"
+    }
+
+    private fun actualizarProgreso() {
+        var checkedCount = 0
+        for (i in 0 until contenedorChecklist.childCount) {
+            val itemView = contenedorChecklist.getChildAt(i)
+            val checkBox = itemView.findViewById<CheckBox>(R.id.cbIngredient)
+            if (checkBox.isChecked) checkedCount++
+        }
+        tvProgress.text = "$checkedCount de ${listaIngredientes.size}"
+    }
+
+    private fun actualizarEstiloIngrediente(textView: TextView, isChecked: Boolean) {
+        if (isChecked) {
+            textView.paintFlags = textView.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+            textView.alpha = 0.5f
+        } else {
+            textView.paintFlags = textView.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+            textView.alpha = 1.0f
         }
     }
 
@@ -172,6 +236,11 @@ class RecipeDetailFragment : Fragment() {
                 .setPositiveButton("Sí") { _, _ -> eliminarReceta(receta) }
                 .setNegativeButton("Cancelar", null)
                 .show()
+        }
+
+        btnResetChecklist.setOnClickListener {
+            ChecklistManager.clearChecklist(requireContext(), receta.id, listaIngredientes.map { it.id })
+            actualizarChecklist()
         }
 
         imgReceta.setOnClickListener {

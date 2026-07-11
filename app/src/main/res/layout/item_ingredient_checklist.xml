@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingVertical="8dp">
+
+    <CheckBox
+        android:id="@+id/cbIngredient"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:buttonTint="@color/recipe_primary" />
+
+    <TextView
+        android:id="@+id/tvIngredientText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:textColor="@color/recipe_text_secondary"
+        android:textSize="15sp"
+        android:lineSpacingExtra="2dp"
+        android:text="1 cup of Flour" />
+
+</LinearLayout>

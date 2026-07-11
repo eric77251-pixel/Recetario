@@ -1,6 +1,5 @@
 package com.example.recetario.activities
 
-import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -41,7 +40,6 @@ import com.example.recetario.utils.SystemBarUtils
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.navigation.NavigationBarView
 import com.google.android.material.textfield.TextInputEditText
-import com.google.android.material.textfield.TextInputLayout
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
@@ -72,12 +70,6 @@ class CreateRecipeActivity : AppCompatActivity() {
     private val stepRows = mutableListOf<StepRow>()
     private val permissionManager = PermissionManager(this)
 
-    private val sugerenciasIngredientes = arrayOf(
-        "Harina", "Azúcar", "Sal", "Huevo", "Leche", "Mantequilla", "Aceite",
-        "Pollo", "Carne", "Pescado", "Arroz", "Pasta", "Cebolla", "Ajo",
-        "Tomate", "Pimienta", "Canela", "Vainilla", "Levadura", "Agua"
-    )
-
     private val pickMedia = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
             selectedMediaUri = uri
@@ -86,9 +78,9 @@ class CreateRecipeActivity : AppCompatActivity() {
     }
 
     inner class IngredientRow(val view: View) {
-        val etNombre: AutoCompleteTextView = view.findViewById(R.id.etNombre)
+        val etNombre: TextInputEditText = view.findViewById(R.id.etNombre)
         val etCantidad: TextInputEditText = view.findViewById(R.id.etCantidad)
-        val etUnidad: TextInputEditText = view.findViewById(R.id.etUnidad)
+        val etUnidad: AutoCompleteTextView = view.findViewById(R.id.etUnidad)
         val btnEliminar: MaterialButton = view.findViewById(R.id.btnEliminar)
     }
 
@@ -284,13 +276,15 @@ class CreateRecipeActivity : AppCompatActivity() {
         val view = inflater.inflate(R.layout.item_ingredient_row, contenedorIngredientes, false)
         val row = IngredientRow(view)
 
-        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, sugerenciasIngredientes)
-        row.etNombre.setAdapter(adapter)
+        // Configurar el dropdown de unidades
+        val unidades = resources.getStringArray(R.array.unidades_medida)
+        val adapterUnidades = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, unidades)
+        row.etUnidad.setAdapter(adapterUnidades)
 
         if (ingrediente != null) {
             row.etNombre.setText(ingrediente.nombre)
             row.etCantidad.setText(ingrediente.cantidad)
-            row.etUnidad.setText(ingrediente.unidad)
+            row.etUnidad.setText(ingrediente.unidad, false)
         }
 
         row.btnEliminar.setOnClickListener {
@@ -298,7 +292,7 @@ class CreateRecipeActivity : AppCompatActivity() {
                 ingredientRows.remove(row)
                 contenedorIngredientes.removeView(view)
             } else {
-                row.etNombre.text.clear()
+                row.etNombre.text?.clear()
                 row.etCantidad.text?.clear()
                 row.etUnidad.text?.clear()
             }
@@ -313,7 +307,7 @@ class CreateRecipeActivity : AppCompatActivity() {
         val view = inflater.inflate(R.layout.item_step_row, contenedorPasos, false)
         val row = StepRow(view)
 
-        row.tvNumero.text = "Paso ${stepRows.size + 1}"
+        row.tvNumero.text = "${stepRows.size + 1}"
 
         if (paso != null) {
             row.etDescripcion.setText(paso.descripcion)

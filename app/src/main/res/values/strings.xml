@@ -1,3 +1,27 @@
 <resources>
     <string name="app_name">Recetario</string>
+    <string name="hint_cantidad">Cant.</string>
+    <string name="hint_unidad">Unidad</string>
+    <string name="hint_ingrediente">Ingrediente</string>
+    <string name="opcion_g">g</string>
+    <string name="opcion_kg">kg</string>
+    <string name="opcion_lb">lb</string>
+    <string name="opcion_ml">ml</string>
+    <string name="opcion_l">l</string>
+    <string name="opcion_taza">taza</string>
+    <string name="opcion_cda">cda</string>
+    <string name="opcion_cdta">cdta</string>
+    <string name="opcion_unidad">unidad</string>
+
+    <string-array name="unidades_medida">
+        <item>@string/opcion_g</item>
+        <item>@string/opcion_kg</item>
+        <item>@string/opcion_lb</item>
+        <item>@string/opcion_ml</item>
+        <item>@string/opcion_l</item>
+        <item>@string/opcion_taza</item>
+        <item>@string/opcion_cda</item>
+        <item>@string/opcion_cdta</item>
+        <item>@string/opcion_unidad</item>
+    </string-array>
 </resources>

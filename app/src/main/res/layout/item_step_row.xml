@@ -3,11 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="8dp"
-    android:layout_marginBottom="4dp"
-    app:cardBackgroundColor="@color/recipe_surface"
+    android:layout_marginBottom="12dp"
     app:cardCornerRadius="16dp"
-    app:cardElevation="2dp"
+    app:cardElevation="0dp"
     app:strokeColor="@color/recipe_outline"
     app:strokeWidth="1dp">
 
@@ -16,79 +14,87 @@
         android:layout_height="wrap_content"
         android:padding="12dp">
 
+        <!-- Círculo del número -->
+        <View
+            android:id="@+id/viewPasoBadge"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:background="@drawable/bg_step_number"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
         <TextView
             android:id="@+id/tvNumeroPaso"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Paso 1"
-            android:textColor="@color/recipe_primary"
-            android:textSize="15sp"
+            android:text="1"
+            android:textColor="@color/white"
+            android:textSize="12sp"
             android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintBottom_toBottomOf="@id/viewPasoBadge"
+            app:layout_constraintEnd_toEndOf="@id/viewPasoBadge"
+            app:layout_constraintStart_toStartOf="@id/viewPasoBadge"
+            app:layout_constraintTop_toTopOf="@id/viewPasoBadge" />
 
+        <!-- Botón eliminar alineado a la derecha -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnEliminar"
-            style="@style/Widget.Material3.Button.IconButton.Outlined"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            style="@style/Widget.Material3.Button.IconButton"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:padding="0dp"
             android:text="✕"
             android:textColor="@color/recipe_text_secondary"
-            android:textSize="10sp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:strokeColor="@color/recipe_outline" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilDescripcion"
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:id="@+id/tilPaso"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:hint="Descripción del paso"
+            android:layout_marginEnd="8dp"
+            android:hint="Descripción"
             app:boxCornerRadiusBottomEnd="12dp"
             app:boxCornerRadiusBottomStart="12dp"
             app:boxCornerRadiusTopEnd="12dp"
             app:boxCornerRadiusTopStart="12dp"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/tilTiempo"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tvNumeroPaso">
+            app:layout_constraintTop_toBottomOf="@id/viewPasoBadge">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etDescripcion"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:gravity="top"
                 android:inputType="textMultiLine|textCapSentences"
                 android:minLines="2"
                 android:textSize="14sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilTiempoSeleccionado"
+            android:id="@+id/tilTiempo"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
-            android:layout_width="wrap_content"
+            android:layout_width="110dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:hint="Tiempo de preparación"
+            android:hint="Tiempo"
             app:boxCornerRadiusBottomEnd="12dp"
             app:boxCornerRadiusBottomStart="12dp"
             app:boxCornerRadiusTopEnd="12dp"
             app:boxCornerRadiusTopStart="12dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tilDescripcion"
-            app:startIconDrawable="@android:drawable/ic_menu_recent_history"
-            app:startIconTint="@color/recipe_text_secondary">
+            app:layout_constraintBottom_toBottomOf="@+id/tilPaso"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/tilPaso">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etTiempoSeleccionado"
-                android:layout_width="160dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:clickable="true"
-                android:cursorVisible="false"
                 android:focusable="false"
+                android:clickable="true"
                 android:inputType="none"
-                android:text="00:00:00"
                 android:textSize="14sp" />
         </com.google.android.material.textfield.TextInputLayout>
 

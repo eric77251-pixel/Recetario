@@ -215,11 +215,13 @@
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnResetChecklist"
                             style="@style/Widget.Material3.Button.IconButton.Outlined"
-                            android:layout_width="32dp"
+                            android:layout_width="40dp"
                             android:layout_height="32dp"
-                            app:icon="@android:drawable/ic_menu_revert"
-                            app:iconSize="16dp"
                             android:padding="0dp"
+                            app:iconGravity="textStart"
+                            app:icon="@android:drawable/ic_menu_revert"
+                            app:iconPadding="1dp"
+                            app:iconSize="16dp"
                             app:strokeColor="@color/recipe_outline" />
                     </LinearLayout>
 

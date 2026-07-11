@@ -141,6 +141,18 @@ class CreateRecipeActivity : AppCompatActivity() {
     }
 
     private fun mostrarDialogoDeBorrador() {
+        val esRecetaPublicada = recetaEnEdicion != null && recetaEnEdicion?.estado != "borrador_local"
+
+        if (esRecetaPublicada) {
+            MaterialAlertDialogBuilder(this)
+                .setTitle("¿Descartar cambios?")
+                .setMessage("Si sales ahora, perderás los cambios realizados en esta receta publicada.")
+                .setPositiveButton("Descartar") { _, _ -> NavigationHelper.volverARecetas(this@CreateRecipeActivity) }
+                .setNegativeButton("Seguir editando") { dialog, _ -> dialog.dismiss() }
+                .show()
+            return
+        }
+
         MaterialAlertDialogBuilder(this)
             .setTitle("¿Qué deseas hacer con la receta?")
             .setMessage("Tienes cambios sin guardar. Puedes guardar un borrador para publicarlo luego o salir sin guardar.")
@@ -363,7 +375,7 @@ class CreateRecipeActivity : AppCompatActivity() {
 
     private fun renumerarPasos() {
         stepRows.forEachIndexed { index, row ->
-            row.tvNumero.text = "Paso ${index + 1}"
+            row.tvNumero.text = "${index + 1}"
         }
     }
 

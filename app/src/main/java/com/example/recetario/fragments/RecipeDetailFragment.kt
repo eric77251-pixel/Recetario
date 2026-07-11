@@ -142,8 +142,8 @@ class RecipeDetailFragment : Fragment() {
             txtProceso.text = if (pasos.isNotEmpty()) {
                 pasos.joinToString("\n\n") { paso ->
                     var texto = "${paso.numero}. ${paso.descripcion}"
-                    if (paso.tiempoMinutos > 0) {
-                        texto += " (${paso.tiempoMinutos} min)"
+                    if (paso.tiempoSegundos > 0) {
+                        texto += " (${formatearTiempo(paso.tiempoSegundos)})"
                     }
                     texto
                 }
@@ -156,6 +156,18 @@ class RecipeDetailFragment : Fragment() {
                 actualizarBotonFavorito()
             }
         }
+    }
+
+    private fun formatearTiempo(totalSegundos: Int): String {
+        val h = totalSegundos / 3600
+        val m = (totalSegundos % 3600) / 60
+        val s = totalSegundos % 60
+        
+        val sb = StringBuilder()
+        if (h > 0) sb.append("${h}h ")
+        if (m > 0) sb.append("${m}m ")
+        if (s > 0 || (h == 0 && m == 0)) sb.append("${s}s")
+        return sb.toString().trim()
     }
 
     private fun actualizarChecklist() {
@@ -171,11 +183,11 @@ class RecipeDetailFragment : Fragment() {
             val isChecked = ChecklistManager.isIngredientChecked(requireContext(), recetaActual?.id ?: "", ingredient.id)
             checkBox.isChecked = isChecked
 
-            val displayStr = StringBuilder("• ")
+            val displayStr = StringBuilder()
             if (ingredient.cantidad.isNotBlank()) displayStr.append("${ingredient.cantidad} ")
             if (ingredient.unidad.isNotBlank()) displayStr.append("${ingredient.unidad} ")
             displayStr.append(ingredient.nombre)
-            tvIngredient.text = displayStr.toString()
+            tvIngredient.text = "• ${displayStr.toString().trim()}"
 
             actualizarEstiloIngrediente(tvIngredient, isChecked)
             if (isChecked) checkedCount++

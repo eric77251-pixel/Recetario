@@ -10,7 +10,7 @@ data class Step(
     var recetaId: String = "",
     var numero: Int = 0,
     var descripcion: String = "",
-    var tiempoMinutos: Int = 0
+    var tiempoSegundos: Int = 0
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString() ?: "",
@@ -25,7 +25,7 @@ data class Step(
         parcel.writeString(recetaId)
         parcel.writeInt(numero)
         parcel.writeString(descripcion)
-        parcel.writeInt(tiempoMinutos)
+        parcel.writeInt(tiempoSegundos)
     }
 
     override fun describeContents(): Int = 0

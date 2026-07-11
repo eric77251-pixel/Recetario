@@ -16,6 +16,7 @@ import android.widget.AutoCompleteTextView
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.NumberPicker
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.addCallback
@@ -71,7 +72,6 @@ class CreateRecipeActivity : AppCompatActivity() {
     private val stepRows = mutableListOf<StepRow>()
     private val permissionManager = PermissionManager(this)
 
-    // Sugerencias de ingredientes comunes
     private val sugerenciasIngredientes = arrayOf(
         "Harina", "Azúcar", "Sal", "Huevo", "Leche", "Mantequilla", "Aceite",
         "Pollo", "Carne", "Pescado", "Arroz", "Pasta", "Cebolla", "Ajo",
@@ -95,8 +95,9 @@ class CreateRecipeActivity : AppCompatActivity() {
     inner class StepRow(val view: View) {
         val tvNumero: TextView = view.findViewById(R.id.tvNumeroPaso)
         val etDescripcion: TextInputEditText = view.findViewById(R.id.etDescripcion)
-        val etTiempo: TextInputEditText = view.findViewById(R.id.etTiempo)
+        val etTiempo: TextInputEditText = view.findViewById(R.id.etTiempoSeleccionado)
         val btnEliminar: MaterialButton = view.findViewById(R.id.btnEliminar)
+        var totalSegundos: Int = 0
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -173,7 +174,7 @@ class CreateRecipeActivity : AppCompatActivity() {
             Step(
                 numero = index + 1,
                 descripcion = row.etDescripcion.text.toString().trim(),
-                tiempoMinutos = row.etTiempo.text.toString().toIntOrNull() ?: 0
+                tiempoSegundos = row.totalSegundos
             )
         }.filter { it.descripcion.isNotBlank() }
 
@@ -283,7 +284,6 @@ class CreateRecipeActivity : AppCompatActivity() {
         val view = inflater.inflate(R.layout.item_ingredient_row, contenedorIngredientes, false)
         val row = IngredientRow(view)
 
-        // Configurar Autocomplete
         val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, sugerenciasIngredientes)
         row.etNombre.setAdapter(adapter)
 
@@ -317,7 +317,15 @@ class CreateRecipeActivity : AppCompatActivity() {
 
         if (paso != null) {
             row.etDescripcion.setText(paso.descripcion)
-            row.etTiempo.setText(if (paso.tiempoMinutos > 0) paso.tiempoMinutos.toString() else "")
+            row.totalSegundos = paso.tiempoSegundos
+            actualizarTextoTiempo(row)
+        }
+
+        row.etTiempo.setOnClickListener {
+            mostrarPickerDuracion(row.totalSegundos) { nuevosSegundos ->
+                row.totalSegundos = nuevosSegundos
+                actualizarTextoTiempo(row)
+            }
         }
 
         row.btnEliminar.setOnClickListener {
@@ -327,12 +335,36 @@ class CreateRecipeActivity : AppCompatActivity() {
                 renumerarPasos()
             } else {
                 row.etDescripcion.text?.clear()
-                row.etTiempo.text?.clear()
+                row.totalSegundos = 0
+                actualizarTextoTiempo(row)
             }
         }
 
         contenedorPasos.addView(view)
         stepRows.add(row)
+    }
+
+    private fun actualizarTextoTiempo(row: StepRow) {
+        val h = row.totalSegundos / 3600
+        val m = (row.totalSegundos % 3600) / 60
+        val s = row.totalSegundos % 60
+        row.etTiempo.setText(String.format("%02d:%02d:%02d", h, m, s))
+    }
+
+    private fun mostrarPickerDuracion(segundosActuales: Int, onResult: (Int) -> Unit) {
+        val view = LayoutInflater.from(this).inflate(R.layout.dialog_duration_picker, null)
+        val pickerH = view.findViewById<NumberPicker>(R.id.pickerHours).apply { minValue = 0; maxValue = 23; value = segundosActuales / 3600 }
+        val pickerM = view.findViewById<NumberPicker>(R.id.pickerMinutes).apply { minValue = 0; maxValue = 59; value = (segundosActuales % 3600) / 60 }
+        val pickerS = view.findViewById<NumberPicker>(R.id.pickerSeconds).apply { minValue = 0; maxValue = 59; value = segundosActuales % 60 }
+
+        MaterialAlertDialogBuilder(this)
+            .setView(view)
+            .setPositiveButton("Aceptar") { _, _ ->
+                val total = (pickerH.value * 3600) + (pickerM.value * 60) + pickerS.value
+                onResult(total)
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     private fun renumerarPasos() {
@@ -366,7 +398,7 @@ class CreateRecipeActivity : AppCompatActivity() {
             Step(
                 numero = index + 1,
                 descripcion = row.etDescripcion.text.toString().trim(),
-                tiempoMinutos = row.etTiempo.text.toString().toIntOrNull() ?: 0
+                tiempoSegundos = row.totalSegundos
             )
         }.filter { it.descripcion.isNotBlank() }
 

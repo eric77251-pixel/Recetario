@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -9,175 +9,154 @@
     android:background="@color/recipe_background"
     android:fitsSystemWindows="true">
 
-    <com.google.android.material.navigationrail.NavigationRailView
-        android:id="@+id/bottomNavigation"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:background="@color/recipe_surface"
-        app:itemIconTint="@color/recipe_primary"
-        app:itemTextColor="@color/recipe_text_primary"
-        app:labelVisibilityMode="labeled"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:menu="@menu/bottom_navigation_profile_menu" />
-
     <LinearLayout
-        android:id="@+id/profileSidePanel"
-        android:layout_width="260dp"
-        android:layout_height="0dp"
-        android:background="@color/recipe_surface"
-        android:elevation="1dp"
-        android:orientation="vertical"
-        android:padding="20dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/bottomNavigation"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Mi perfil"
-            android:textColor="@color/recipe_text_primary"
-            android:textSize="22sp"
-            android:textStyle="bold" />
-
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="90dp"
-            android:layout_height="90dp"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="20dp"
-            app:cardCornerRadius="45dp"
-            app:cardElevation="0dp"
-            app:strokeColor="@color/recipe_outline"
-            app:strokeWidth="1dp">
-            <ImageView
-                android:id="@+id/imgFotoPerfil"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="centerCrop"
-                android:src="@android:drawable/sym_def_app_icon" />
-        </com.google.android.material.card.MaterialCardView>
-
-        <TextView
-            android:id="@+id/txtNombreUsuario"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:gravity="center"
-            android:text="Nombre"
-            android:textColor="@color/recipe_text_primary"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/txtCorreoUsuario"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:text="correo@ejemplo.com"
-            android:textColor="@color/recipe_text_secondary"
-            android:textSize="13sp" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:orientation="horizontal">
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
-                <TextView android:id="@+id/txtCantidadRecetas" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textStyle="bold" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Mis recetas" android:textSize="11sp" />
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
-                <TextView android:id="@+id/txtFavoritas" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textStyle="bold" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Guardadas" android:textSize="11sp" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <View android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnEditarPerfil"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Editar"
-            android:textAllCaps="false"
-            app:cornerRadius="12dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnCerrarSesion"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Cerrar sesión"
-            android:textColor="@color/recipe_error"
-            android:textAllCaps="false" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/profileSidePanel">
+        android:orientation="horizontal">
 
+        <!-- Barra lateral compartida -->
+        <include layout="@layout/layout_navigation_bar" />
+
+        <!-- Panel Izquierdo: Información -->
         <LinearLayout
-            android:id="@+id/profileTabsBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:background="@color/recipe_background">
-            <LinearLayout
-                android:id="@+id/tabGuardadas"
-                android:layout_width="0dp"
+            android:id="@+id/profileHeader"
+            android:layout_width="320dp"
+            android:layout_height="match_parent"
+            android:background="@color/recipe_surface"
+            android:elevation="1dp"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:text="Mi perfil"
+                android:textColor="@color/recipe_text_primary"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="84dp"
+                android:layout_height="84dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="16dp"
+                app:cardCornerRadius="42dp"
+                app:cardElevation="0dp"
+                app:strokeColor="@color/recipe_outline"
+                app:strokeWidth="1dp">
+                <ImageView
+                    android:id="@+id/imgFotoPerfil"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:src="@android:drawable/sym_def_app_icon" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                android:id="@+id/txtNombreUsuario"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
                 android:gravity="center"
-                android:orientation="vertical"
-                android:paddingVertical="14dp">
-                <TextView android:id="@+id/txtTabGuardadas" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="GUARDADAS" android:textStyle="bold" android:textSize="13sp" />
-                <View android:id="@+id/indicatorGuardadas" android:layout_width="60dp" android:layout_height="3dp" android:layout_marginTop="6dp" android:background="@color/recipe_primary" />
+                android:text="Nombre"
+                android:textColor="@color/recipe_text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/txtCorreoUsuario"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="correo@ejemplo.com"
+                android:textColor="@color/recipe_text_secondary"
+                android:textSize="13sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:orientation="horizontal">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+                    <TextView android:id="@+id/txtCantidadRecetas" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textStyle="bold" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Mis recetas" android:textSize="11sp" />
+                </LinearLayout>
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+                    <TextView android:id="@+id/txtFavoritas" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textStyle="bold" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Guardadas" android:textSize="11sp" />
+                </LinearLayout>
             </LinearLayout>
+
+            <View android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
+
+            <!-- BOTONES CORREGIDOS: Uno al lado del otro con bordes -->
             <LinearLayout
-                android:id="@+id/tabMisRecetas"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical"
-                android:paddingVertical="14dp">
-                <TextView android:id="@+id/txtTabMisRecetas" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="MIS RECETAS" android:textStyle="bold" android:textSize="13sp" />
-                <View android:id="@+id/indicatorMisRecetas" android:layout_width="60dp" android:layout_height="3dp" android:layout_marginTop="6dp" android:background="@color/recipe_primary" android:visibility="invisible" />
-            </LinearLayout>
-            <LinearLayout
-                android:id="@+id/tabBorradores"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical"
-                android:paddingVertical="14dp">
-                <TextView android:id="@+id/txtTabBorradores" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="BORRADORES" android:textStyle="bold" android:textSize="13sp" />
-                <View android:id="@+id/indicatorBorradores" android:layout_width="60dp" android:layout_height="3dp" android:layout_marginTop="6dp" android:background="@color/recipe_primary" android:visibility="invisible" />
+                android:orientation="horizontal"
+                android:layout_marginTop="16dp">
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnEditarPerfil"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    android:text="Editar"
+                    android:textAllCaps="false"
+                    android:textSize="12sp"
+                    app:cornerRadius="12dp"
+                    app:strokeColor="@color/recipe_primary"
+                    app:strokeWidth="1dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnCerrarSesion"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
+                    android:text="Salir"
+                    android:textColor="@color/recipe_error"
+                    app:strokeColor="@color/recipe_error"
+                    app:strokeWidth="1dp"
+                    android:textAllCaps="false"
+                    android:textSize="12sp"
+                    app:cornerRadius="12dp" />
             </LinearLayout>
         </LinearLayout>
 
-        <androidx.viewpager2.widget.ViewPager2
-            android:id="@+id/viewPagerProfile"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
-    </LinearLayout>
+        <!-- Panel Derecho: Pestañas -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+            <LinearLayout
+                android:id="@+id/profileTabsBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="@color/recipe_background">
+                <LinearLayout android:id="@+id/tabGuardadas" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical" android:paddingVertical="14dp" android:clickable="true" android:focusable="true">
+                    <TextView android:id="@+id/txtTabGuardadas" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="GUARDADAS" android:textStyle="bold" android:textSize="12sp" />
+                    <View android:id="@+id/indicatorGuardadas" android:layout_width="60dp" android:layout_height="3dp" android:layout_marginTop="6dp" android:background="@color/recipe_primary" />
+                </LinearLayout>
+                <LinearLayout android:id="@+id/tabMisRecetas" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical" android:paddingVertical="14dp" android:clickable="true" android:focusable="true">
+                    <TextView android:id="@+id/txtTabMisRecetas" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="MIS RECETAS" android:textStyle="bold" android:textSize="12sp" />
+                    <View android:id="@+id/indicatorMisRecetas" android:layout_width="60dp" android:layout_height="3dp" android:layout_marginTop="6dp" android:background="@color/recipe_primary" android:visibility="invisible" />
+                </LinearLayout>
+                <LinearLayout android:id="@+id/tabBorradores" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical" android:paddingVertical="14dp" android:clickable="true" android:focusable="true">
+                    <TextView android:id="@+id/txtTabBorradores" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="BORRADORES" android:textStyle="bold" android:textSize="12sp" />
+                    <View android:id="@+id/indicatorBorradores" android:layout_width="60dp" android:layout_height="3dp" android:layout_marginTop="6dp" android:background="@color/recipe_primary" android:visibility="invisible" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <androidx.viewpager2.widget.ViewPager2
+                android:id="@+id/viewPagerProfile"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </LinearLayout>
+    </LinearLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

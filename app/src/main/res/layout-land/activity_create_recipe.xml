@@ -9,178 +9,185 @@
     android:background="@color/recipe_background"
     android:fitsSystemWindows="true">
 
-    <com.google.android.material.navigationrail.NavigationRailView
-        android:id="@+id/bottomNavigation"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:layout_gravity="start"
-        android:background="@color/recipe_surface"
-        app:itemIconTint="@color/recipe_primary"
-        app:itemTextColor="@color/recipe_text_primary"
-        app:labelVisibilityMode="labeled"
-        app:menu="@menu/bottom_navigation_create_menu" />
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="horizontal"
-        android:layout_marginStart="80dp">
+        android:orientation="horizontal">
 
-        <!-- LADO IZQUIERDO: Previsualización Fija -->
+        <!-- Barra lateral incluida desde el archivo compartido -->
+        <include layout="@layout/layout_navigation_bar" />
+
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:padding="24dp">
+            android:orientation="horizontal">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_star_badge"
-                android:paddingStart="12dp"
-                android:paddingTop="6dp"
-                android:paddingEnd="12dp"
-                android:paddingBottom="6dp"
-                android:text="MODO EDICIÓN"
-                android:textColor="@color/header_badge_text"
-                android:textSize="10sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.1" />
-
-            <TextView
-                android:id="@+id/lblNuevaReceta"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Nueva Receta"
-                android:textColor="@color/recipe_text_primary"
-                android:textSize="28sp"
-                android:textStyle="bold" />
-
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:layout_marginTop="20dp"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="4dp"
-                app:strokeWidth="0dp">
-
-                <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent">
-                    <com.google.android.material.imageview.ShapeableImageView
-                        android:id="@+id/imagePreview"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:background="@color/recipe_surface_variant"
-                        android:scaleType="centerCrop" />
-                    <TextView
-                        android:id="@+id/tvMediaHint"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:gravity="center"
-                        android:text="📸 Añade una foto"
-                        android:textColor="@color/recipe_text_secondary" />
-                </FrameLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnPostImagen"
-                style="@style/Widget.Material3.Button.TonalButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Cambiar Imagen"
-                app:cornerRadius="16dp" />
-        </LinearLayout>
-
-        <!-- LADO DERECHO: Scroll de contenido -->
-        <androidx.core.widget.NestedScrollView
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1.5"
-            android:paddingHorizontal="24dp"
-            android:clipToPadding="false"
-            android:paddingBottom="100dp">
-
+            <!-- LADO IZQUIERDO: Imagen fija -->
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
                 android:orientation="vertical"
-                android:paddingTop="24dp">
+                android:padding="24dp">
 
-                <!-- Bloque Info -->
-                <com.google.android.material.card.MaterialCardView
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_star_badge"
+                    android:paddingStart="12dp"
+                    android:paddingTop="6dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="6dp"
+                    android:text="MODO EDICIÓN"
+                    android:textColor="@color/header_badge_text"
+                    android:textSize="10sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/lblNuevaReceta"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Nueva Receta"
+                    android:textColor="@color/recipe_text_primary"
+                    android:textSize="28sp"
+                    android:textStyle="bold" />
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:layout_marginTop="20dp"
                     app:cardCornerRadius="24dp"
-                    app:cardElevation="0dp"
-                    app:strokeColor="@color/recipe_outline"
-                    app:strokeWidth="1dp">
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
-                        <com.google.android.material.textfield.TextInputLayout
-                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    app:cardElevation="4dp"
+                    app:strokeWidth="0dp">
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+                        <com.google.android.material.imageview.ShapeableImageView
+                            android:id="@+id/imagePreview"
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:hint="Nombre">
-                            <com.google.android.material.textfield.TextInputEditText android:id="@+id/etPostNombre" android:layout_width="match_parent" android:layout_height="wrap_content" />
-                        </com.google.android.material.textfield.TextInputLayout>
-                        <com.google.android.material.textfield.TextInputLayout
-                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                            android:layout_height="match_parent"
+                            android:background="@color/recipe_surface_variant"
+                            android:scaleType="centerCrop" />
+                        <TextView
+                            android:id="@+id/tvMediaHint"
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="12dp"
-                            android:hint="Descripción">
-                            <com.google.android.material.textfield.TextInputEditText android:id="@+id/etPostDescripcion" android:layout_width="match_parent" android:layout_height="wrap_content" android:minLines="2" />
-                        </com.google.android.material.textfield.TextInputLayout>
-                    </LinearLayout>
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:text="📸 Añade una foto"
+                            android:textColor="@color/recipe_text_secondary" />
+                    </FrameLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- Bloque Ingredientes -->
-                <com.google.android.material.card.MaterialCardView
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnPostImagen"
+                    style="@style/Widget.Material3.Button.TonalButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    app:cardCornerRadius="24dp"
-                    app:cardElevation="0dp"
-                    app:strokeColor="@color/recipe_outline"
-                    app:strokeWidth="1dp">
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
-                            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Ingredientes" android:textStyle="bold" android:textSize="18sp" />
-                            <com.google.android.material.button.MaterialButton android:id="@+id/btnAgregarIngrediente" style="@style/Widget.Material3.Button.IconButton.Filled.Tonal" android:layout_width="32dp" android:layout_height="32dp" android:text="+" />
-                        </LinearLayout>
-                        <LinearLayout android:id="@+id/contenedorIngredientes" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-
-                <!-- Bloque Pasos -->
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    app:cardCornerRadius="24dp"
-                    app:cardElevation="0dp"
-                    app:strokeColor="@color/recipe_outline"
-                    app:strokeWidth="1dp">
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
-                            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Preparación" android:textStyle="bold" android:textSize="18sp" />
-                            <com.google.android.material.button.MaterialButton android:id="@+id/btnAgregarPaso" style="@style/Widget.Material3.Button.IconButton.Filled.Tonal" android:layout_width="32dp" android:layout_height="32dp" android:text="+" />
-                        </LinearLayout>
-                        <LinearLayout android:id="@+id/contenedorPasos" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-
-                <!-- Botones Accion -->
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:orientation="horizontal">
-                    <com.google.android.material.button.MaterialButton android:id="@+id/btnCancelarPost" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="0dp" android:layout_height="56dp" android:layout_weight="1" android:layout_marginEnd="8dp" android:text="Descartar" app:cornerRadius="16dp" />
-                    <com.google.android.material.button.MaterialButton android:id="@+id/btnGuardarPost" android:layout_width="0dp" android:layout_height="56dp" android:layout_weight="1.5" android:text="Publicar Receta" app:backgroundTint="@color/recipe_primary" app:cornerRadius="16dp" />
-                </LinearLayout>
-
+                    android:text="Cambiar Imagen"
+                    app:cornerRadius="16dp" />
             </LinearLayout>
-        </androidx.core.widget.NestedScrollView>
+
+            <!-- LADO DERECHO: Formulario con scroll -->
+            <androidx.core.widget.NestedScrollView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1.5"
+                android:paddingHorizontal="24dp"
+                android:clipToPadding="false"
+                android:paddingBottom="40dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingTop="24dp">
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        app:cardCornerRadius="24dp"
+                        app:strokeColor="@color/recipe_outline"
+                        app:strokeWidth="1dp">
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                            <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Nombre">
+                                <com.google.android.material.textfield.TextInputEditText android:id="@+id/etPostNombre" android:layout_width="match_parent" android:layout_height="wrap_content" />
+                            </com.google.android.material.textfield.TextInputLayout>
+                            <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:hint="Descripción">
+                                <com.google.android.material.textfield.TextInputEditText android:id="@+id/etPostDescripcion" android:layout_width="match_parent" android:layout_height="wrap_content" android:minLines="2" />
+                            </com.google.android.material.textfield.TextInputLayout>
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        app:cardCornerRadius="24dp"
+                        app:strokeColor="@color/recipe_outline"
+                        app:strokeWidth="1dp">
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
+                                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Ingredientes" android:textStyle="bold" android:textSize="18sp" />
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btnAgregarIngrediente"
+                                    style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
+                                    android:layout_width="32dp"
+                                    android:layout_height="32dp"
+                                    android:padding="0dp"
+                                    android:insetTop="0dp"
+                                    android:insetBottom="0dp"
+                                    android:insetLeft="0dp"
+                                    android:insetRight="0dp"
+                                    android:gravity="center"
+                                    android:includeFontPadding="false"
+                                    android:text="+"
+                                    android:textSize="20sp" />
+                            </LinearLayout>
+                            <LinearLayout android:id="@+id/contenedorIngredientes" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingTop="15dp"/>
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        app:cardCornerRadius="24dp"
+                        app:strokeColor="@color/recipe_outline"
+                        app:strokeWidth="1dp">
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
+                                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Preparación" android:textStyle="bold" android:textSize="18sp" />
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btnAgregarPaso"
+                                    style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
+                                    android:layout_width="32dp"
+                                    android:layout_height="32dp"
+                                    android:padding="0dp"
+                                    android:insetTop="0dp"
+                                    android:insetBottom="0dp"
+                                    android:insetLeft="0dp"
+                                    android:insetRight="0dp"
+                                    android:gravity="center"
+                                    android:includeFontPadding="false"
+                                    android:text="+"
+                                    android:textSize="20sp" />
+                            </LinearLayout>
+                            <LinearLayout android:id="@+id/contenedorPasos" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingTop="15dp"/>
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingBottom="24dp">
+                        <com.google.android.material.button.MaterialButton android:id="@+id/btnCancelarPost" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="0dp" android:layout_height="56dp" android:layout_weight="1" android:layout_marginEnd="8dp" android:text="Descartar" app:cornerRadius="16dp" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/btnGuardarPost" android:layout_width="0dp" android:layout_height="56dp" android:layout_weight="1.5" android:text="Publicar Receta" app:backgroundTint="@color/recipe_primary" app:cornerRadius="16dp" />
+                    </LinearLayout>
+
+                </LinearLayout>
+            </androidx.core.widget.NestedScrollView>
+        </LinearLayout>
     </LinearLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

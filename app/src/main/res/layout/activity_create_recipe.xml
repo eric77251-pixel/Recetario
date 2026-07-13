@@ -21,7 +21,7 @@
             android:orientation="vertical"
             android:paddingHorizontal="20dp">
 
-            <!-- Banner Restaurado -->
+            <!-- Banner -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -71,26 +71,8 @@
                 app:cardElevation="0dp"
                 app:strokeColor="@color/recipe_outline"
                 app:strokeWidth="1dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Visuales"
-                        android:textColor="@color/recipe_text_primary"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-
-                    <FrameLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="220dp"
-                        android:layout_marginTop="16dp">
-
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                    <FrameLayout android:layout_width="match_parent" android:layout_height="220dp">
                         <com.google.android.material.imageview.ShapeableImageView
                             android:id="@+id/imagePreview"
                             android:layout_width="match_parent"
@@ -98,36 +80,13 @@
                             android:background="@color/recipe_surface_variant"
                             android:scaleType="centerCrop"
                             app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.LargeComponent" />
-
-                        <LinearLayout
-                            android:id="@+id/tvMediaHintContainer"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:gravity="center"
-                            android:orientation="vertical">
-                            <TextView
-                                android:id="@+id/tvMediaHint"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="📸 Añade una foto"
-                                android:textColor="@color/recipe_text_secondary"
-                                android:textSize="16sp" />
-                        </LinearLayout>
+                        <TextView android:id="@+id/tvMediaHint" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:text="📸 Añade una foto" android:textColor="@color/recipe_text_secondary" />
                     </FrameLayout>
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnPostImagen"
-                        style="@style/Widget.Material3.Button.TonalButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:text="Seleccionar Imagen"
-                        android:textAllCaps="false"
-                        app:cornerRadius="16dp" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/btnPostImagen" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="Seleccionar Imagen" app:cornerRadius="16dp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Sección Detalles -->
+            <!-- Detalles -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -136,62 +95,17 @@
                 app:cardElevation="0dp"
                 app:strokeColor="@color/recipe_outline"
                 app:strokeWidth="1dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Sobre la receta"
-                        android:textColor="@color/recipe_text_primary"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:hint="Título de la receta"
-                        app:boxCornerRadiusBottomEnd="16dp"
-                        app:boxCornerRadiusBottomStart="16dp"
-                        app:boxCornerRadiusTopEnd="16dp"
-                        app:boxCornerRadiusTopStart="16dp">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/etPostNombre"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="textCapSentences" />
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                    <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Título">
+                        <com.google.android.material.textfield.TextInputEditText android:id="@+id/etPostNombre" android:layout_width="match_parent" android:layout_height="wrap_content" />
                     </com.google.android.material.textfield.TextInputLayout>
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:hint="Descripción..."
-                        app:boxCornerRadiusBottomEnd="16dp"
-                        app:boxCornerRadiusBottomStart="16dp"
-                        app:boxCornerRadiusTopEnd="16dp"
-                        app:boxCornerRadiusTopStart="16dp">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/etPostDescripcion"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:gravity="top"
-                            android:inputType="textMultiLine|textCapSentences"
-                            android:minLines="3" />
+                    <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:hint="Descripción">
+                        <com.google.android.material.textfield.TextInputEditText android:id="@+id/etPostDescripcion" android:layout_width="match_parent" android:layout_height="wrap_content" android:minLines="3" />
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Sección Ingredientes -->
+            <!-- Ingredientes -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -200,46 +114,29 @@
                 app:cardElevation="0dp"
                 app:strokeColor="@color/recipe_outline"
                 app:strokeWidth="1dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Ingredientes"
-                            android:textColor="@color/recipe_text_primary"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Ingredientes" android:textStyle="bold" android:textSize="18sp" />
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnAgregarIngrediente"
                             style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
                             android:layout_width="32dp"
                             android:layout_height="32dp"
                             android:padding="0dp"
-                            android:text="+"
-                            android:textSize="18sp" />
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:insetLeft="0dp"
+                            android:insetRight="0dp"
+                            app:icon="@android:drawable/ic_input_add"
+                            app:iconSize="20dp"
+                            app:iconPadding="0dp"
+                            app:iconGravity="textStart" />
                     </LinearLayout>
-
-                    <LinearLayout
-                        android:id="@+id/contenedorIngredientes"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:orientation="vertical" />
+                    <LinearLayout android:id="@+id/contenedorIngredientes" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingTop="15dp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Sección Pasos -->
+            <!-- Pasos -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -248,89 +145,37 @@
                 app:cardElevation="0dp"
                 app:strokeColor="@color/recipe_outline"
                 app:strokeWidth="1dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Preparación"
-                            android:textColor="@color/recipe_text_primary"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Preparación" android:textStyle="bold" android:textSize="18sp" />
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnAgregarPaso"
                             style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
                             android:layout_width="32dp"
                             android:layout_height="32dp"
                             android:padding="0dp"
-                            android:text="+"
-                            android:textSize="18sp" />
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:insetLeft="0dp"
+                            android:insetRight="0dp"
+                            app:icon="@android:drawable/ic_input_add"
+                            app:iconSize="20dp"
+                            app:iconPadding="0dp"
+                            app:iconGravity="textStart" />
                     </LinearLayout>
-
-                    <LinearLayout
-                        android:id="@+id/contenedorPasos"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:orientation="vertical" />
+                    <LinearLayout android:id="@+id/contenedorPasos" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingTop="15dp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Acciones (Dentro del Scroll) -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="24dp"
-                android:layout_marginBottom="16dp">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnCancelarPost"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
-                    android:layout_width="0dp"
-                    android:layout_height="56dp"
-                    android:layout_marginEnd="8dp"
-                    android:layout_weight="1"
-                    android:text="Descartar"
-                    android:textColor="@color/recipe_text_secondary"
-                    app:cornerRadius="16dp"
-                    app:strokeColor="@color/recipe_outline" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnGuardarPost"
-                    android:layout_width="0dp"
-                    android:layout_height="56dp"
-                    android:layout_marginStart="8dp"
-                    android:layout_weight="1.5"
-                    android:text="Publicar Receta"
-                    android:textStyle="bold"
-                    app:backgroundTint="@color/recipe_primary"
-                    app:cornerRadius="16dp" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:layout_marginBottom="16dp">
+                <com.google.android.material.button.MaterialButton android:id="@+id/btnCancelarPost" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="0dp" android:layout_height="56dp" android:layout_weight="1" android:layout_marginEnd="8dp" android:text="Descartar" app:cornerRadius="16dp" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/btnGuardarPost" android:layout_width="0dp" android:layout_height="56dp" android:layout_weight="1.5" android:text="Publicar Receta" app:backgroundTint="@color/recipe_primary" app:cornerRadius="16dp" />
             </LinearLayout>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottomNavigation"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:background="@color/recipe_surface"
-        app:itemIconTint="@color/recipe_primary"
-        app:itemTextColor="@color/recipe_text_primary"
-        app:labelVisibilityMode="labeled"
-        app:menu="@menu/bottom_navigation_create_menu" />
+    <!-- Barra incluida -->
+    <include layout="@layout/layout_navigation_bar" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

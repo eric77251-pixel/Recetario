@@ -271,6 +271,7 @@ class ProfileActivity : AppCompatActivity() {
         val intent = Intent(this, MainActivity::class.java).apply {
             putExtra("EXTRA_RECETA", receta)
             putExtra("ABRIR_DETALLE", true)
+            putExtra("ORIGEN_DETALLE", "PERFIL")
         }
         startActivity(intent)
     }

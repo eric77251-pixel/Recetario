@@ -36,6 +36,7 @@ import com.example.recetario.utils.ZoomListener
 import com.google.android.material.button.MaterialButton
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
+import com.example.recetario.activities.ProfileActivity
 
 class RecipeDetailFragment : Fragment() {
 
@@ -388,6 +389,17 @@ class RecipeDetailFragment : Fragment() {
     }
 
     private fun volverAListado() {
+        val origen = arguments?.getString("ORIGEN_DETALLE") ?: "HOME"
+
+        if (origen == "PERFIL") {
+            val intent = Intent(requireContext(), ProfileActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            }
+            startActivity(intent)
+            requireActivity().finish()
+            return
+        }
+
         (requireActivity() as MainActivity).cambiarFragmento(
             HomeFragment(),
             agregarAlBackStack = false,

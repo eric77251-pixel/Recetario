@@ -127,14 +127,21 @@ class MainActivity : AppCompatActivity() {
             }
 
             receta?.let {
+                val origen = intent.getStringExtra("ORIGEN_DETALLE") ?: "HOME"
+
                 val fragment = RecipeDetailFragment().apply {
                     arguments = Bundle().apply {
                         putParcelable("EXTRA_RECETA", it)
+                        putString("ORIGEN_DETALLE", origen)
                     }
                 }
-                // Cargamos el detalle con posibilidad de volver atrás al Home
+
                 cambiarFragmento(fragment, agregarAlBackStack = true, mostrarMenu = true)
-                navigationBar.selectedItemId = R.id.nav_recetas
+
+                if (origen == "HOME") {
+                    navigationBar.selectedItemId = R.id.nav_recetas
+                }
+
                 return true
             }
         }

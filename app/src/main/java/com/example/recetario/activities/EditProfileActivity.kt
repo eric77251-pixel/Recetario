@@ -93,9 +93,7 @@ class EditProfileActivity : AppCompatActivity() {
 
     private fun configurarEventos() {
         txtCambiarFoto.setOnClickListener {
-            if (permissionManager.permisosMultimedia(200)) {
-                seleccionarFotoLauncher.launch("image/*")
-            }
+            seleccionarFotoLauncher.launch("image/*")
         }
 
         btnGuardarCambios.setOnClickListener {
@@ -115,7 +113,7 @@ class EditProfileActivity : AppCompatActivity() {
     }
 
     private fun mostrarDialogoRecorte(uri: Uri) {
-        // 1. Cargar el Bitmap desde la Uri correctamente
+        // cargar el Bitmap desde la Uri correctamente
         val bitmapOriginal = try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 val source = ImageDecoder.createSource(contentResolver, uri)
@@ -137,7 +135,7 @@ class EditProfileActivity : AppCompatActivity() {
             return
         }
 
-        // 2. Usar los métodos reales de tu clase SquareCropImageView
+        // usar los métodos reales de tu clase SquareCropImageView
         val cropImageView = SquareCropImageView(this)
         cropImageView.setImageBitmapForCrop(bitmapOriginal)
 
@@ -145,7 +143,7 @@ class EditProfileActivity : AppCompatActivity() {
             .setTitle("Recortar foto (1:1)")
             .setView(cropImageView)
             .setPositiveButton("Recortar") { _, _ ->
-                // 3. Usar el método real obtenerBitmapRecortado() de SquareCropImageView
+                // usar el método real obtenerBitmapRecortado() de SquareCropImageView
                 val bitmapResult = cropImageView.obtenerBitmapRecortado()
                 if (bitmapResult != null) {
                     fotoBitmapRecortada = bitmapResult
@@ -182,7 +180,18 @@ class EditProfileActivity : AppCompatActivity() {
                     val bytes = stream.toByteArray()
                     val nombreArchivo = "perfil_${AuthManager.obtenerUsuario()?.uid}.jpg"
                     val nuevaUrl = UserManager.subirFotoPerfil(nombreArchivo, bytes)
-                    if (nuevaUrl != null) urlFoto = nuevaUrl
+
+                    if (nuevaUrl == null) {
+                        Toast.makeText(
+                            this@EditProfileActivity,
+                            "No se pudo subir la foto de perfil",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        btnGuardarPostState(true)
+                        return@launch
+                    }
+
+                    urlFoto = nuevaUrl
                 }
 
                 val usuarioActualizado = SessionManager.usuario?.copy(

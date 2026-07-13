@@ -116,6 +116,7 @@ class HomeFragment : Fragment() {
         val fragment = RecipeDetailFragment().apply {
             arguments = Bundle().apply {
                 putParcelable("EXTRA_RECETA", receta)
+                putString("ORIGEN_DETALLE", "HOME")
             }
         }
 

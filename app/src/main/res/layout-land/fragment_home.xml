@@ -7,7 +7,6 @@
     android:layout_height="match_parent"
     android:background="@color/recipe_background">
 
-    <!-- Sección de Búsqueda y Título (Izquierda) -->
     <LinearLayout
         android:id="@+id/leftPanel"
         android:layout_width="0dp"
@@ -75,7 +74,6 @@
         android:orientation="vertical"
         app:layout_constraintGuide_percent="0.35" />
 
-    <!-- Sección de Lista (Derecha) -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerReceta"
         android:layout_width="0dp"

@@ -14,7 +14,6 @@
         android:layout_height="wrap_content"
         android:padding="12dp">
 
-        <!-- Círculo del número -->
         <View
             android:id="@+id/viewPasoBadge"
             android:layout_width="28dp"
@@ -36,7 +35,6 @@
             app:layout_constraintStart_toStartOf="@id/viewPasoBadge"
             app:layout_constraintTop_toTopOf="@id/viewPasoBadge" />
 
-        <!-- Botón eliminar alineado a la derecha -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnEliminar"
             style="@style/Widget.Material3.Button.IconButton"

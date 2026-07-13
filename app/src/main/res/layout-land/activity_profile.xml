@@ -14,10 +14,8 @@
         android:layout_height="match_parent"
         android:orientation="horizontal">
 
-        <!-- Barra lateral compartida -->
         <include layout="@layout/layout_navigation_bar" />
 
-        <!-- Panel Izquierdo: Información -->
         <LinearLayout
             android:id="@+id/profileHeader"
             android:layout_width="320dp"
@@ -89,7 +87,6 @@
 
             <View android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
 
-            <!-- BOTONES CORREGIDOS: Uno al lado del otro con bordes -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -126,7 +123,6 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Panel Derecho: Pestañas -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"

@@ -56,10 +56,10 @@ class DraftRecipesFragment : Fragment() {
     }
 
     private fun cargarBorradores() {
-        // 1. Obtenemos todo el JSON de borradores locales
+        // obtenemos todo el JSON de borradores locales
         val borradoresLocales = LocalDraftManager.obtenerTodos(requireContext())
 
-        // 2. Extraemos solo el objeto "Recipe" para pasarlo a tu Adapter visual
+        // extraemos solo el objeto "Recipe" para pasarlo al Adapter visual
         val recetasLocales = borradoresLocales.map { it.recipe }
 
         draftRecipes.clear()

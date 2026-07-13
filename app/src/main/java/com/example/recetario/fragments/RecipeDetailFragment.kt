@@ -30,6 +30,7 @@ import com.example.recetario.data.UserManager
 import com.example.recetario.model.Ingredient
 import com.example.recetario.model.Recipe
 import com.example.recetario.model.SavedRecipe
+import com.example.recetario.model.Step
 import com.example.recetario.utils.NetworkUtils
 import com.example.recetario.utils.ZoomListener
 import com.google.android.material.button.MaterialButton
@@ -64,7 +65,27 @@ class RecipeDetailFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         val view = inflater.inflate(R.layout.fragment_recipe_detail, container, false)
+        inicializarVistas(view)
+        return view
+    }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        val receta = obtenerRecetaDesdeArgumentos()
+        if (receta == null) {
+            mostrarMensaje("No se pudo abrir la receta.")
+            volverAListado()
+            return
+        }
+
+        recetaActual = receta
+        cargarInformacionReceta(receta)
+        configurarEventos(receta)
+        configurarBotonAtras()
+    }
+
+    private fun inicializarVistas(view: View) {
         imgReceta = view.findViewById(R.id.imgReceta)
         txtNombre = view.findViewById(R.id.txtNombre)
         txtUsuario = view.findViewById(R.id.txtUsuario)
@@ -80,25 +101,6 @@ class RecipeDetailFragment : Fragment() {
         layoutZoom = view.findViewById(R.id.layoutZoom)
         imgZoom = view.findViewById(R.id.imgZoom)
         btnCerrarZoom = view.findViewById(R.id.btnCerrarZoom)
-
-        return view
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        recetaActual = obtenerRecetaDesdeArgumentos()
-
-        val receta = recetaActual
-        if (receta == null) {
-            Toast.makeText(requireContext(), "No se pudo abrir la receta.", Toast.LENGTH_SHORT).show()
-            volverAListado()
-            return
-        }
-
-        cargarDatosBase(receta)
-        configurarEventos(receta)
-        configurarBotonAtras()
     }
 
     private fun obtenerRecetaDesdeArgumentos(): Recipe? {
@@ -110,50 +112,70 @@ class RecipeDetailFragment : Fragment() {
         }
     }
 
-    private fun cargarDatosBase(receta: Recipe) {
-        val usuarioActual = FirebaseAuth.getInstance().currentUser
-
-        txtNombre.text = receta.nombre
-        txtDescripcion.text = receta.descripcion
-        imgReceta.load(receta.imagenUrl)
-        imgZoom.load(receta.imagenUrl)
-
-        configurarBotonesPropietario(usuarioActual?.uid == receta.usuarioId)
+    private fun cargarInformacionReceta(receta: Recipe) {
+        pintarDatosBase(receta)
+        configurarBotonesPropietario(esPropietario(receta))
 
         if (!NetworkUtils.hayConexion(requireContext())) {
-            Toast.makeText(requireContext(), "Sin conexión. La información puede estar incompleta.", Toast.LENGTH_LONG).show()
+            mostrarMensaje("Sin conexión. La información puede estar incompleta.", Toast.LENGTH_LONG)
             return
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
-            val usuario = UserManager.obtenerUsuario(receta.usuarioId)
-            txtUsuario.text = if (usuario != null) {
-                "Por ${usuario.nombre} ${usuario.apellido}"
-            } else {
-                "Por usuario desconocido"
-            }
+            cargarAutor(receta)
+            cargarIngredientes(receta.id)
+            cargarPasos(receta.id)
+            cargarEstadoFavorito(receta)
+        }
+    }
 
-            val ingredientes = IngredientManager.obtenerIngredientes(receta.id)
-            listaIngredientes.clear()
-            listaIngredientes.addAll(ingredientes)
-            actualizarChecklist()
+    private fun pintarDatosBase(receta: Recipe) {
+        txtNombre.text = receta.nombre
+        txtDescripcion.text = receta.descripcion
+        imgReceta.load(receta.imagenUrl)
+        imgZoom.load(receta.imagenUrl)
+    }
 
-            val pasos = StepManager.obtenerPasos(receta.id)
-            txtProceso.text = if (pasos.isNotEmpty()) {
-                pasos.joinToString("\n\n") { paso ->
-                    var texto = "${paso.numero}. ${paso.descripcion}"
-                    if (paso.tiempoSegundos > 0) {
-                        texto += " (${formatearTiempo(paso.tiempoSegundos)})"
-                    }
-                    texto
+    private fun esPropietario(receta: Recipe): Boolean {
+        return FirebaseAuth.getInstance().currentUser?.uid == receta.usuarioId
+    }
+
+    private suspend fun cargarAutor(receta: Recipe) {
+        val usuario = UserManager.obtenerUsuario(receta.usuarioId)
+        txtUsuario.text = if (usuario != null) {
+            "Por ${usuario.nombre} ${usuario.apellido}"
+        } else {
+            "Por usuario desconocido"
+        }
+    }
+
+    private suspend fun cargarIngredientes(recetaId: String) {
+        val ingredientes = IngredientManager.obtenerIngredientes(recetaId)
+        listaIngredientes.clear()
+        listaIngredientes.addAll(ingredientes)
+        actualizarChecklist()
+    }
+
+    private suspend fun cargarPasos(recetaId: String) {
+        val pasos = StepManager.obtenerPasos(recetaId)
+        txtProceso.text = formatearListaPasos(pasos)
+    }
+
+    private suspend fun cargarEstadoFavorito(receta: Recipe) {
+        val usuarioActual = FirebaseAuth.getInstance().currentUser ?: return
+        esFavorito = SavedRecipeManager.esFavorito(usuarioActual.uid, receta.id)
+        actualizarBotonFavorito()
+    }
+
+    private fun formatearListaPasos(pasos: List<Step>): String {
+        if (pasos.isEmpty()) return "No hay pasos disponibles."
+
+        return pasos.joinToString("\n\n") { paso ->
+            buildString {
+                append("${paso.numero}. ${paso.descripcion}")
+                if (paso.tiempoSegundos > 0) {
+                    append(" (${formatearTiempo(paso.tiempoSegundos)})")
                 }
-            } else {
-                "No hay pasos disponibles."
-            }
-
-            if (usuarioActual != null) {
-                esFavorito = SavedRecipeManager.esFavorito(usuarioActual.uid, receta.id)
-                actualizarBotonFavorito()
             }
         }
     }
@@ -162,57 +184,67 @@ class RecipeDetailFragment : Fragment() {
         val h = totalSegundos / 3600
         val m = (totalSegundos % 3600) / 60
         val s = totalSegundos % 60
-        
-        val sb = StringBuilder()
-        if (h > 0) sb.append("${h}h ")
-        if (m > 0) sb.append("${m}m ")
-        if (s > 0 || (h == 0 && m == 0)) sb.append("${s}s")
-        return sb.toString().trim()
+
+        return buildString {
+            if (h > 0) append("${h}h ")
+            if (m > 0) append("${m}m ")
+            if (s > 0 || (h == 0 && m == 0)) append("${s}s")
+        }.trim()
     }
 
     private fun actualizarChecklist() {
         contenedorChecklist.removeAllViews()
         val inflater = LayoutInflater.from(requireContext())
-        var checkedCount = 0
 
         listaIngredientes.forEach { ingredient ->
-            val itemView = inflater.inflate(R.layout.item_ingredient_checklist, contenedorChecklist, false)
-            val checkBox = itemView.findViewById<CheckBox>(R.id.cbIngredient)
-            val tvIngredient = itemView.findViewById<TextView>(R.id.tvIngredientText)
-
-            val isChecked = ChecklistManager.isIngredientChecked(requireContext(), recetaActual?.id ?: "", ingredient.id)
-            checkBox.isChecked = isChecked
-
-            val displayStr = StringBuilder()
-            if (ingredient.cantidad.isNotBlank()) displayStr.append("${ingredient.cantidad} ")
-            if (ingredient.unidad.isNotBlank()) displayStr.append("${ingredient.unidad} ")
-            displayStr.append(ingredient.nombre)
-            tvIngredient.text = "• ${displayStr.toString().trim()}"
-
-            actualizarEstiloIngrediente(tvIngredient, isChecked)
-            if (isChecked) checkedCount++
-
-            checkBox.setOnCheckedChangeListener { _, checked ->
-                ChecklistManager.setIngredientChecked(requireContext(), recetaActual?.id ?: "", ingredient.id, checked)
-                actualizarEstiloIngrediente(tvIngredient, checked)
-                actualizarProgreso()
-            }
-
-            itemView.setOnClickListener { checkBox.toggle() }
-
+            val itemView = crearItemChecklist(inflater, ingredient)
             contenedorChecklist.addView(itemView)
         }
-        tvProgress.text = "$checkedCount de ${listaIngredientes.size}"
+
+        actualizarProgreso()
+    }
+
+    private fun crearItemChecklist(inflater: LayoutInflater, ingredient: Ingredient): View {
+        val itemView = inflater.inflate(R.layout.item_ingredient_checklist, contenedorChecklist, false)
+        val checkBox = itemView.findViewById<CheckBox>(R.id.cbIngredient)
+        val tvIngredient = itemView.findViewById<TextView>(R.id.tvIngredientText)
+        val isChecked = ChecklistManager.isIngredientChecked(requireContext(), recetaActual?.id ?: "", ingredient.id)
+
+        checkBox.isChecked = isChecked
+        tvIngredient.text = "• ${formatearIngrediente(ingredient)}"
+        actualizarEstiloIngrediente(tvIngredient, isChecked)
+
+        checkBox.setOnCheckedChangeListener { _, checked ->
+            ChecklistManager.setIngredientChecked(requireContext(), recetaActual?.id ?: "", ingredient.id, checked)
+            actualizarEstiloIngrediente(tvIngredient, checked)
+            actualizarProgreso()
+        }
+
+        itemView.setOnClickListener { checkBox.toggle() }
+        return itemView
+    }
+
+    private fun formatearIngrediente(ingredient: Ingredient): String {
+        return buildString {
+            if (ingredient.cantidad.isNotBlank()) append("${ingredient.cantidad} ")
+            if (ingredient.unidad.isNotBlank()) append("${ingredient.unidad} ")
+            append(ingredient.nombre)
+        }.trim()
     }
 
     private fun actualizarProgreso() {
+        val checkedCount = contarIngredientesMarcados()
+        tvProgress.text = "$checkedCount de ${listaIngredientes.size}"
+    }
+
+    private fun contarIngredientesMarcados(): Int {
         var checkedCount = 0
         for (i in 0 until contenedorChecklist.childCount) {
             val itemView = contenedorChecklist.getChildAt(i)
             val checkBox = itemView.findViewById<CheckBox>(R.id.cbIngredient)
             if (checkBox.isChecked) checkedCount++
         }
-        tvProgress.text = "$checkedCount de ${listaIngredientes.size}"
+        return checkedCount
     }
 
     private fun actualizarEstiloIngrediente(textView: TextView, isChecked: Boolean) {
@@ -226,43 +258,39 @@ class RecipeDetailFragment : Fragment() {
     }
 
     private fun configurarEventos(receta: Recipe) {
-        btnVolverDetalle.setOnClickListener {
-            volverAListado()
-        }
+        btnVolverDetalle.setOnClickListener { volverAListado() }
+        btnFavorito.setOnClickListener { alternarFavorito(receta) }
+        btnEditarReceta.setOnClickListener { abrirEdicion(receta) }
+        btnEliminarReceta.setOnClickListener { confirmarEliminacion(receta) }
+        btnResetChecklist.setOnClickListener { reiniciarChecklist(receta) }
+        imgReceta.setOnClickListener { abrirZoom() }
+        btnCerrarZoom.setOnClickListener { cerrarZoom() }
+    }
 
-        btnFavorito.setOnClickListener {
-            alternarFavorito(receta)
+    private fun abrirEdicion(receta: Recipe) {
+        val intent = Intent(requireContext(), CreateRecipeActivity::class.java).apply {
+            putExtra("EXTRA_RECETA_EDITAR", receta)
         }
+        startActivity(intent)
+    }
 
-        btnEditarReceta.setOnClickListener {
-            val intent = Intent(requireContext(), CreateRecipeActivity::class.java).apply {
-                putExtra("EXTRA_RECETA_EDITAR", receta)
-            }
-            startActivity(intent)
-        }
+    private fun confirmarEliminacion(receta: Recipe) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Eliminar receta")
+            .setMessage("¿Seguro que deseas eliminar esta receta?")
+            .setPositiveButton("Sí") { _, _ -> eliminarReceta(receta) }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
 
-        btnEliminarReceta.setOnClickListener {
-            AlertDialog.Builder(requireContext())
-                .setTitle("Eliminar receta")
-                .setMessage("¿Seguro que deseas eliminar esta receta?")
-                .setPositiveButton("Sí") { _, _ -> eliminarReceta(receta) }
-                .setNegativeButton("Cancelar", null)
-                .show()
-        }
+    private fun reiniciarChecklist(receta: Recipe) {
+        ChecklistManager.clearChecklist(requireContext(), receta.id, listaIngredientes.map { it.id })
+        actualizarChecklist()
+    }
 
-        btnResetChecklist.setOnClickListener {
-            ChecklistManager.clearChecklist(requireContext(), receta.id, listaIngredientes.map { it.id })
-            actualizarChecklist()
-        }
-
-        imgReceta.setOnClickListener {
-            layoutZoom.visibility = View.VISIBLE
-            imgZoom.setOnTouchListener(ZoomListener(requireContext()))
-        }
-
-        btnCerrarZoom.setOnClickListener {
-            cerrarZoom()
-        }
+    private fun abrirZoom() {
+        layoutZoom.visibility = View.VISIBLE
+        imgZoom.setOnTouchListener(ZoomListener(requireContext()))
     }
 
     private fun configurarBotonesPropietario(esPropietario: Boolean) {
@@ -276,64 +304,71 @@ class RecipeDetailFragment : Fragment() {
     private fun alternarFavorito(receta: Recipe) {
         val usuarioActual = FirebaseAuth.getInstance().currentUser
         if (usuarioActual == null) {
-            Toast.makeText(requireContext(), "Debe iniciar sesión.", Toast.LENGTH_SHORT).show()
+            mostrarMensaje("Debe iniciar sesión.")
             return
         }
 
         if (!NetworkUtils.hayConexion(requireContext())) {
-            Toast.makeText(requireContext(), "Sin conexión. Intente nuevamente.", Toast.LENGTH_LONG).show()
+            mostrarMensaje("Sin conexión. Intente nuevamente.", Toast.LENGTH_LONG)
             return
         }
 
         btnFavorito.isEnabled = false
-
         viewLifecycleOwner.lifecycleScope.launch {
-            val correcto = if (esFavorito) {
-                SavedRecipeManager.eliminarFavorito(usuarioActual.uid, receta.id)
-            } else {
-                SavedRecipeManager.agregarFavorito(
-                    SavedRecipe(
-                        id = "${usuarioActual.uid}_${receta.id}",
-                        usuarioId = usuarioActual.uid,
-                        recetaId = receta.id
-                    )
-                )
-            }
-
-            if (correcto) {
-                esFavorito = !esFavorito
-                actualizarBotonFavorito()
-            } else {
-                Toast.makeText(requireContext(), "No se pudo actualizar guardados.", Toast.LENGTH_SHORT).show()
-            }
-
-            btnFavorito.isEnabled = true
+            guardarEstadoFavorito(usuarioActual.uid, receta)
         }
+    }
+
+    private suspend fun guardarEstadoFavorito(usuarioId: String, receta: Recipe) {
+        val correcto = if (esFavorito) {
+            SavedRecipeManager.eliminarFavorito(usuarioId, receta.id)
+        } else {
+            SavedRecipeManager.agregarFavorito(
+                SavedRecipe(
+                    id = "${usuarioId}_${receta.id}",
+                    usuarioId = usuarioId,
+                    recetaId = receta.id
+                )
+            )
+        }
+
+        if (correcto) {
+            esFavorito = !esFavorito
+            actualizarBotonFavorito()
+        } else {
+            mostrarMensaje("No se pudo actualizar guardados.")
+        }
+
+        btnFavorito.isEnabled = true
     }
 
     private fun eliminarReceta(receta: Recipe) {
         if (!NetworkUtils.hayConexion(requireContext())) {
-            Toast.makeText(requireContext(), "Sin conexión. Intente nuevamente.", Toast.LENGTH_LONG).show()
+            mostrarMensaje("Sin conexión. Intente nuevamente.", Toast.LENGTH_LONG)
             return
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                IngredientManager.eliminarIngredientes(receta.id)
-                StepManager.eliminarPasos(receta.id)
+                eliminarDatosRelacionados(receta.id)
                 val ok = RecipeManager.eliminarReceta(receta.id)
 
                 if (ok) {
-                    Toast.makeText(requireContext(), "Receta eliminada.", Toast.LENGTH_SHORT).show()
+                    mostrarMensaje("Receta eliminada.")
                     volverAListado()
                 } else {
-                    Toast.makeText(requireContext(), "No se pudo eliminar la receta.", Toast.LENGTH_SHORT).show()
+                    mostrarMensaje("No se pudo eliminar la receta.")
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                Toast.makeText(requireContext(), "Error al eliminar receta.", Toast.LENGTH_SHORT).show()
+                mostrarMensaje("Error al eliminar receta.")
             }
         }
+    }
+
+    private suspend fun eliminarDatosRelacionados(recetaId: String) {
+        IngredientManager.eliminarIngredientes(recetaId)
+        StepManager.eliminarPasos(recetaId)
     }
 
     private fun configurarBotonAtras() {
@@ -368,5 +403,9 @@ class RecipeDetailFragment : Fragment() {
             btnFavorito.setIconResource(R.drawable.outline_bookmark_add_24)
             btnFavorito.text = "Guardar receta"
         }
+    }
+
+    private fun mostrarMensaje(mensaje: String, duracion: Int = Toast.LENGTH_SHORT) {
+        Toast.makeText(requireContext(), mensaje, duracion).show()
     }
 }

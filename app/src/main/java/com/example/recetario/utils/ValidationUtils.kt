@@ -15,7 +15,7 @@ object ValidationUtils {
     }
 
     /**
-     * Regla exigida por la rúbrica: mínimo 12 caracteres, letras, números
+     * Contraseña con mínimo 12 caracteres, letras, números
      * y al menos un carácter especial.
      */
     fun contraseñaValida(contraseña: String): Boolean {

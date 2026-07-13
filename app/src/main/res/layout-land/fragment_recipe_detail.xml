@@ -166,7 +166,6 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Card Ingredientes -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -224,7 +223,6 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Card Preparación -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -274,7 +272,6 @@
         </LinearLayout>
     </ScrollView>
 
-    <!-- Overlay de Zoom -->
     <FrameLayout
         android:id="@+id/layoutZoom"
         android:layout_width="match_parent"

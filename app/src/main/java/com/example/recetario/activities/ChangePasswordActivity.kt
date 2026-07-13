@@ -5,178 +5,140 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.example.recetario.utils.ValidationUtils
-import com.example.recetario.utils.NetworkUtils
 import com.example.recetario.R
+import com.example.recetario.utils.NetworkUtils
 import com.example.recetario.utils.SystemBarUtils
+import com.example.recetario.utils.ValidationUtils
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 
 class ChangePasswordActivity : AppCompatActivity() {
 
-    // Campos del formulario
     private lateinit var txtPasswordActual: EditText
     private lateinit var txtNuevaPassword: EditText
     private lateinit var txtConfirmarPassword: EditText
-
-    // Botones
     private lateinit var btnGuardar: Button
     private lateinit var btnCancelar: Button
 
+    private data class PasswordChangeForm(
+        val passwordActual: String,
+        val nuevaPassword: String,
+        val confirmarPassword: String
+    )
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContentView(R.layout.activity_change_password)
         SystemBarUtils.aplicarInsets(findViewById(R.id.rootChangePassword))
 
-        // Referencias a la interfaz
+        inicializarVistas()
+        configurarEventos()
+    }
+
+    private fun inicializarVistas() {
         txtPasswordActual = findViewById(R.id.txtPasswordActual)
         txtNuevaPassword = findViewById(R.id.txtNuevaPassword)
         txtConfirmarPassword = findViewById(R.id.txtConfirmarPassword)
-
         btnGuardar = findViewById(R.id.btnGuardar)
         btnCancelar = findViewById(R.id.btnCancelar)
-
-        // Guardar cambios
-        btnGuardar.setOnClickListener {
-            cambiarContraseña()
-        }
-
-        // Cancelar
-        btnCancelar.setOnClickListener {
-            finish()
-        }
     }
 
-    /**
-     * Valida el formulario y cambia la contraseña.
-     */
-    private fun cambiarContraseña() {
+    private fun configurarEventos() {
+        btnGuardar.setOnClickListener { cambiarContrasena() }
+        btnCancelar.setOnClickListener { finish() }
+    }
 
-        val passwordActual =
-            txtPasswordActual.text.toString()
+    private fun cambiarContrasena() {
+        val form = leerFormulario()
+        if (!validarFormulario(form)) return
+        if (!validarConexion()) return
 
-        val nuevaPassword =
-            txtNuevaPassword.text.toString()
-
-        val confirmarPassword =
-            txtConfirmarPassword.text.toString()
-
-        // Validar contraseña actual
-        if (ValidationUtils.campoVacio(passwordActual)) {
-
-            txtPasswordActual.error = "Ingrese su contraseña actual"
-            txtPasswordActual.requestFocus()
-            return
-        }
-
-        // Validar nueva contraseña
-        if (ValidationUtils.campoVacio(nuevaPassword)) {
-
-            txtNuevaPassword.error = "Ingrese una nueva contraseña"
-            txtNuevaPassword.requestFocus()
-            return
-        }
-
-        // Validar seguridad de la nueva contraseña
-        if (!ValidationUtils.contraseñaValida(nuevaPassword)) {
-
-            txtNuevaPassword.error =
-                ValidationUtils.mensajeReglaPassword()
-
-            txtNuevaPassword.requestFocus()
-            return
-        }
-
-        // Validar que sea diferente a la actual
-        if (!ValidationUtils.contraseñasDiferentes(
-                passwordActual,
-                nuevaPassword
-            )
-        ) {
-
-            txtNuevaPassword.error =
-                "La nueva contraseña debe ser diferente a la actual"
-
-            txtNuevaPassword.requestFocus()
-            return
-        }
-
-        // Confirmar contraseña
-        if (!ValidationUtils.contraseñasCoinciden(
-                nuevaPassword,
-                confirmarPassword
-            )
-        ) {
-
-            txtConfirmarPassword.error =
-                "Las contraseñas no coinciden"
-
-            txtConfirmarPassword.requestFocus()
-            return
-        }
-
-        if (!NetworkUtils.hayConexion(this)) {
-            Toast.makeText(
-                this,
-                "Sin conexión. Intente nuevamente.",
-                Toast.LENGTH_LONG
-            ).show()
-            return
-        }
-
+        val usuario = obtenerUsuarioAutenticado() ?: return
         btnGuardar.isEnabled = false
+        reautenticarYActualizar(usuario, form)
+    }
 
-        val usuario = FirebaseAuth.getInstance().currentUser
+    private fun leerFormulario(): PasswordChangeForm {
+        return PasswordChangeForm(
+            passwordActual = txtPasswordActual.text.toString(),
+            nuevaPassword = txtNuevaPassword.text.toString(),
+            confirmarPassword = txtConfirmarPassword.text.toString()
+        )
+    }
 
-        if (usuario == null || usuario.email == null) {
-
-            Toast.makeText(
-                this,
-                "No se encontró el usuario autenticado",
-                Toast.LENGTH_SHORT
-            ).show()
-
-            btnGuardar.isEnabled = true
-            return
+    private fun validarFormulario(form: PasswordChangeForm): Boolean {
+        if (ValidationUtils.campoVacio(form.passwordActual)) {
+            marcarError(txtPasswordActual, "Ingrese su contraseña actual")
+            return false
         }
 
-        val credential = EmailAuthProvider.getCredential(
-            usuario.email!!,
-            passwordActual
-        )
+        if (ValidationUtils.campoVacio(form.nuevaPassword)) {
+            marcarError(txtNuevaPassword, "Ingrese una nueva contraseña")
+            return false
+        }
+
+        if (!ValidationUtils.contraseñaValida(form.nuevaPassword)) {
+            marcarError(txtNuevaPassword, ValidationUtils.mensajeReglaPassword())
+            return false
+        }
+
+        if (!ValidationUtils.contraseñasDiferentes(form.passwordActual, form.nuevaPassword)) {
+            marcarError(txtNuevaPassword, "La nueva contraseña debe ser diferente a la actual")
+            return false
+        }
+
+        if (!ValidationUtils.contraseñasCoinciden(form.nuevaPassword, form.confirmarPassword)) {
+            marcarError(txtConfirmarPassword, "Las contraseñas no coinciden")
+            return false
+        }
+
+        return true
+    }
+
+    private fun validarConexion(): Boolean {
+        if (NetworkUtils.hayConexion(this)) return true
+        mostrarMensaje("Sin conexión. Intente nuevamente.", Toast.LENGTH_LONG)
+        return false
+    }
+
+    private fun obtenerUsuarioAutenticado(): FirebaseUser? {
+        val usuario = FirebaseAuth.getInstance().currentUser
+        if (usuario != null && usuario.email != null) return usuario
+
+        mostrarMensaje("No se encontró el usuario autenticado")
+        return null
+    }
+
+    private fun reautenticarYActualizar(usuario: FirebaseUser, form: PasswordChangeForm) {
+        val credential = EmailAuthProvider.getCredential(usuario.email!!, form.passwordActual)
 
         usuario.reauthenticate(credential)
-            .addOnSuccessListener {
-
-                usuario.updatePassword(nuevaPassword)
-                    .addOnSuccessListener {
-
-                        Toast.makeText(
-                            this,
-                            "Contraseña actualizada correctamente",
-                            Toast.LENGTH_SHORT
-                        ).show()
-
-                        finish()
-                    }
-                    .addOnFailureListener { e ->
-
-                        btnGuardar.isEnabled = true
-
-                        Toast.makeText(
-                            this,
-                            e.message ?: "No se pudo cambiar la contraseña",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-            }
+            .addOnSuccessListener { actualizarPassword(usuario, form.nuevaPassword) }
             .addOnFailureListener {
-
                 btnGuardar.isEnabled = true
-
-                txtPasswordActual.error = "La contraseña actual es incorrecta"
-                txtPasswordActual.requestFocus()
+                marcarError(txtPasswordActual, "La contraseña actual es incorrecta")
             }
+    }
+
+    private fun actualizarPassword(usuario: FirebaseUser, nuevaPassword: String) {
+        usuario.updatePassword(nuevaPassword)
+            .addOnSuccessListener {
+                mostrarMensaje("Contraseña actualizada correctamente")
+                finish()
+            }
+            .addOnFailureListener { e ->
+                btnGuardar.isEnabled = true
+                mostrarMensaje(e.message ?: "No se pudo cambiar la contraseña", Toast.LENGTH_LONG)
+            }
+    }
+
+    private fun marcarError(campo: EditText, mensaje: String) {
+        campo.error = mensaje
+        campo.requestFocus()
+    }
+
+    private fun mostrarMensaje(mensaje: String, duracion: Int = Toast.LENGTH_SHORT) {
+        Toast.makeText(this, mensaje, duracion).show()
     }
 }

@@ -15,7 +15,6 @@
         android:orientation="vertical"
         android:padding="12dp">
 
-        <!-- Fila 1: Nombre del Ingrediente -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -54,7 +53,6 @@
                 app:iconTint="@color/recipe_text_secondary" />
         </LinearLayout>
 
-        <!-- Fila 2: Cantidad y Unidad -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

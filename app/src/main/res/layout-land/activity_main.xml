@@ -10,7 +10,6 @@
     android:fitsSystemWindows="true"
     tools:context=".activities.MainActivity">
 
-    <!-- En horizontal usamos NavigationRailView para mayor comodidad -->
     <com.google.android.material.navigationrail.NavigationRailView
         android:id="@+id/bottomNavigation"
         android:layout_width="wrap_content"

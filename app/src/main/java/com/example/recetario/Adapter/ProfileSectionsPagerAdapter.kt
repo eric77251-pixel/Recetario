@@ -19,8 +19,8 @@ class ProfileSectionsPagerAdapter(
         return when (position) {
             0 -> SavedRecipesFragment()
             1 -> MyRecipesFragment()
-            2 -> DraftRecipesFragment() // Aquí conectamos tu nueva vista
-            else -> SavedRecipesFragment() // Caso por defecto por seguridad
+            2 -> DraftRecipesFragment()
+            else -> SavedRecipesFragment()
         }
     }
 }

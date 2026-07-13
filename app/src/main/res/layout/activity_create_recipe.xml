@@ -175,7 +175,6 @@
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <!-- Barra incluida -->
     <include layout="@layout/layout_navigation_bar" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

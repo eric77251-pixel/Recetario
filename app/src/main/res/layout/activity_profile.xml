@@ -92,7 +92,6 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- BOTONES LADO A LADO CON BORDES -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -125,7 +124,6 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Barra de pestañas -->
         <LinearLayout
             android:id="@+id/profileTabsBar"
             android:layout_width="match_parent"

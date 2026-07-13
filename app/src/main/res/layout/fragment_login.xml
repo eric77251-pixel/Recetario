@@ -13,7 +13,6 @@
         android:layout_height="wrap_content"
         android:padding="24dp">
 
-        <!-- Contenedor central con ancho máximo para Landscape -->
         <LinearLayout
             android:id="@+id/loginContainer"
             android:layout_width="0dp"

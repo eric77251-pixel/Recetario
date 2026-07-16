@@ -315,7 +315,6 @@ class RecipeDetailFragment : Fragment() {
         }
 
         btnFavorito.isEnabled = false
-
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 guardarEstadoFavorito(usuarioActual.uid, receta)

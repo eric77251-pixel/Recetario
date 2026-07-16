@@ -5,7 +5,6 @@ import com.example.recetario.model.Recipe
 import com.google.firebase.firestore.FirebaseFirestore
 import io.github.jan.supabase.storage.storage
 import kotlinx.coroutines.tasks.await
-import com.example.recetario.data.RecipeManager
 
 object RecipeManager {
 
@@ -37,10 +36,10 @@ object RecipeManager {
 
     suspend fun obtenerReceta(id: String): Recipe? {
         return try {
-            val documento = recetas.document(id).get().await()
+            if (id.isBlank()) return null
 
-            val receta = documento.toObject(Recipe::class.java)
-                ?: return null
+            val documento = recetas.document(id).get().await()
+            val receta = documento.toObject(Recipe::class.java) ?: return null
 
             receta.id = documento.id
             receta

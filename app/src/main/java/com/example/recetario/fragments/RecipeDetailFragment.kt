@@ -315,8 +315,15 @@ class RecipeDetailFragment : Fragment() {
         }
 
         btnFavorito.isEnabled = false
+
         viewLifecycleOwner.lifecycleScope.launch {
-            guardarEstadoFavorito(usuarioActual.uid, receta)
+            try {
+                guardarEstadoFavorito(usuarioActual.uid, receta)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                mostrarMensaje("Error al actualizar guardados.")
+                btnFavorito.isEnabled = true
+            }
         }
     }
 
@@ -336,6 +343,12 @@ class RecipeDetailFragment : Fragment() {
         if (correcto) {
             esFavorito = !esFavorito
             actualizarBotonFavorito()
+
+            if (esFavorito) {
+                mostrarMensaje("Receta guardada.")
+            } else {
+                mostrarMensaje("Receta quitada de guardados.")
+            }
         } else {
             mostrarMensaje("No se pudo actualizar guardados.")
         }

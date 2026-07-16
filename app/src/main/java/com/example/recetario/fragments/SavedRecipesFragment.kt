@@ -56,11 +56,19 @@ class SavedRecipesFragment : Fragment() {
         cargarRecetasGuardadas()
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (::adapter.isInitialized) {
+            cargarRecetasGuardadas()
+        }
+    }
+
     /**
      * Carga las recetas guardadas del usuario autenticado y actualiza el contador del perfil.
      */
     private fun cargarRecetasGuardadas() {
         if (!NetworkUtils.hayConexion(requireContext())) {
+            Toast.makeText(requireContext(), "Sin conexión. No se pudieron cargar guardadas.", Toast.LENGTH_SHORT).show()
             return
         }
 

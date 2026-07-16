@@ -34,6 +34,13 @@ object SavedRecipeManager {
 
         return try {
 
+            val idDirecto = "${usuarioId}_${recetaId}"
+
+            coleccion
+                .document(idDirecto)
+                .delete()
+                .await()
+
             val documentos = coleccion
                 .whereEqualTo("usuarioId", usuarioId)
                 .whereEqualTo("recetaId", recetaId)

@@ -1,12 +1,9 @@
 package com.example.recetario.activities
 
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
-import android.view.ViewGroup
-import android.widget.LinearLayout
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
@@ -14,13 +11,11 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import coil.load
-import coil.request.CachePolicy
 import com.example.recetario.R
 import com.example.recetario.utils.SystemBarUtils
 import com.example.recetario.utils.SquareCropImageView
@@ -29,11 +24,9 @@ import com.example.recetario.utils.AuthManager
 import com.example.recetario.utils.NetworkUtils
 import com.example.recetario.utils.PermissionManager
 import com.example.recetario.utils.SessionManager
-import com.example.recetario.utils.ValidationUtils
 import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
-import kotlin.math.min
 
 class EditProfileActivity : AppCompatActivity() {
 
@@ -43,8 +36,6 @@ class EditProfileActivity : AppCompatActivity() {
     private lateinit var etEditarApellido: TextInputEditText
     private lateinit var btnGuardarCambios: Button
     private lateinit var btnIrCambiarContrasena: Button
-
-    private val permissionManager = PermissionManager(this)
     private var fotoUriSeleccionada: Uri? = null
     private var fotoBitmapRecortada: Bitmap? = null
 
@@ -135,7 +126,6 @@ class EditProfileActivity : AppCompatActivity() {
             return
         }
 
-        // usar los métodos reales de tu clase SquareCropImageView
         val cropImageView = SquareCropImageView(this)
         cropImageView.setImageBitmapForCrop(bitmapOriginal)
 
@@ -143,7 +133,6 @@ class EditProfileActivity : AppCompatActivity() {
             .setTitle("Recortar foto (1:1)")
             .setView(cropImageView)
             .setPositiveButton("Recortar") { _, _ ->
-                // usar el método real obtenerBitmapRecortado() de SquareCropImageView
                 val bitmapResult = cropImageView.obtenerBitmapRecortado()
                 if (bitmapResult != null) {
                     fotoBitmapRecortada = bitmapResult
@@ -210,6 +199,11 @@ class EditProfileActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
+                Toast.makeText(
+                    this@EditProfileActivity,
+                    "Error inesperado al actualizar el perfil",
+                    Toast.LENGTH_SHORT
+                ).show()
                 btnGuardarPostState(true)
             }
         }

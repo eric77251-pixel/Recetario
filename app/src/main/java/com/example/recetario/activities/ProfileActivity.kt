@@ -218,6 +218,11 @@ class ProfileActivity : AppCompatActivity() {
 
     private fun cargarDatosPerfil() {
         if (!NetworkUtils.hayConexion(this)) {
+            Toast.makeText(
+                this,
+                "Sin conexión. No se pudo actualizar el perfil.",
+                Toast.LENGTH_SHORT
+            ).show()
             return
         }
 
@@ -226,7 +231,6 @@ class ProfileActivity : AppCompatActivity() {
             cargarEstadisticasPerfil()
         }
     }
-
     private suspend fun cargarUsuario() {
         val firebaseUser = FirebaseAuth.getInstance().currentUser ?: return
         val usuario = UserManager.obtenerUsuario(firebaseUser.uid) ?: return

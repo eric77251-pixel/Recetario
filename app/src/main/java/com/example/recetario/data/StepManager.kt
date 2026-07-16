@@ -24,9 +24,8 @@ object StepManager {
             true
 
         } catch (e: Exception) {
-
             e.printStackTrace()
-            throw Exception(e.message)
+            false
         }
     }
 

@@ -12,6 +12,8 @@ import com.example.recetario.utils.ValidationUtils
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import android.content.Intent
+import com.example.recetario.utils.AuthManager
 
 class ChangePasswordActivity : AppCompatActivity() {
 
@@ -29,6 +31,16 @@ class ChangePasswordActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (AuthManager.obtenerUsuario() == null) {
+            val intent = Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            startActivity(intent)
+            finish()
+            return
+        }
+
         setContentView(R.layout.activity_change_password)
         SystemBarUtils.aplicarInsets(findViewById(R.id.rootChangePassword))
 

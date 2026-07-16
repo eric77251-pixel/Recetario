@@ -590,7 +590,14 @@ class CreateRecipeActivity : AppCompatActivity() {
                 return
             }
 
-            guardarDetalleReceta(receta.id, formData)
+            val detalleGuardado = guardarDetalleReceta(receta.id, formData)
+
+            if (!detalleGuardado) {
+                mostrarMensaje("Error al guardar ingredientes o pasos")
+                btnGuardarPost.isEnabled = true
+                return
+            }
+
             eliminarBorradorSiAplica(idBorradorLocal)
 
             mostrarMensaje("¡Receta publicada!")
@@ -622,22 +629,39 @@ class CreateRecipeActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun guardarDetalleReceta(recetaId: String, formData: RecipeFormData) {
-        if (recetaEnEdicion != null && recetaEnEdicion?.estado != ESTADO_BORRADOR_LOCAL) {
-            IngredientManager.eliminarIngredientes(recetaId)
-            StepManager.eliminarPasos(recetaId)
-        }
+    private suspend fun guardarDetalleReceta(recetaId: String, formData: RecipeFormData): Boolean {
+        return try {
+            if (recetaEnEdicion != null && recetaEnEdicion?.estado != ESTADO_BORRADOR_LOCAL) {
+                val ingredientesEliminados = IngredientManager.eliminarIngredientes(recetaId)
+                val pasosEliminados = StepManager.eliminarPasos(recetaId)
 
-        formData.ingredientes.forEach { ingrediente ->
-            ingrediente.recetaId = recetaId
-            ingrediente.id = UUID.randomUUID().toString()
-            IngredientManager.crearIngrediente(ingrediente)
-        }
+                if (!ingredientesEliminados || !pasosEliminados) {
+                    return false
+                }
+            }
 
-        formData.pasos.forEach { paso ->
-            paso.recetaId = recetaId
-            paso.id = UUID.randomUUID().toString()
-            StepManager.crearPaso(paso)
+            formData.ingredientes.forEach { ingrediente ->
+                ingrediente.recetaId = recetaId
+                ingrediente.id = UUID.randomUUID().toString()
+
+                if (!IngredientManager.crearIngrediente(ingrediente)) {
+                    return false
+                }
+            }
+
+            formData.pasos.forEach { paso ->
+                paso.recetaId = recetaId
+                paso.id = UUID.randomUUID().toString()
+
+                if (!StepManager.crearPaso(paso)) {
+                    return false
+                }
+            }
+
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
         }
     }
 

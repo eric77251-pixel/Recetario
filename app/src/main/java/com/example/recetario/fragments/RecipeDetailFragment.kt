@@ -355,6 +355,7 @@ class RecipeDetailFragment : Fragment() {
                 val ok = RecipeManager.eliminarReceta(receta.id)
 
                 if (ok) {
+                    RecipeManager.eliminarImagen(receta.imagenUrl)
                     mostrarMensaje("Receta eliminada.")
                     volverAListado()
                 } else {

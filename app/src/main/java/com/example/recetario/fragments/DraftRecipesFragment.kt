@@ -1,5 +1,6 @@
 package com.example.recetario.fragments
 
+import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -10,7 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.recetario.R
-import com.example.recetario.activities.ProfileActivity
+import com.example.recetario.activities.CreateRecipeActivity
 import com.example.recetario.adapter.ProfileRecipeAdapter
 import com.example.recetario.data.LocalDraftManager
 import com.example.recetario.model.Recipe
@@ -37,8 +38,12 @@ class DraftRecipesFragment : Fragment() {
         recyclerDraftRecipes = view.findViewById(R.id.recyclerDraftRecipes)
         txtEmptyDraftRecipes = view.findViewById(R.id.txtEmptyDraftRecipes)
 
+        // 🌟 CAMBIO CLAVE: Un borrador ahora se abre directamente en modo edición
         adapter = ProfileRecipeAdapter(draftRecipes) { recipe ->
-            (activity as? ProfileActivity)?.abrirDetalle(recipe)
+            val intent = Intent(requireContext(), CreateRecipeActivity::class.java).apply {
+                putExtra("EXTRA_RECETA_EDITAR", recipe)
+            }
+            startActivity(intent)
         }
 
         val columnas = if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) 3 else 2
@@ -49,17 +54,13 @@ class DraftRecipesFragment : Fragment() {
         cargarBorradores()
     }
 
-    // Se carga automáticamente en onResume cada vez que la pantalla se vuelva a ver
     override fun onResume() {
         super.onResume()
         cargarBorradores()
     }
 
     private fun cargarBorradores() {
-        // obtenemos todo el JSON de borradores locales
         val borradoresLocales = LocalDraftManager.obtenerTodos(requireContext())
-
-        // extraemos solo el objeto "Recipe" para pasarlo al Adapter visual
         val recetasLocales = borradoresLocales.map { it.recipe }
 
         draftRecipes.clear()

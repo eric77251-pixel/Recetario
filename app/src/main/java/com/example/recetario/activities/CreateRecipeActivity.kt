@@ -221,22 +221,20 @@ class CreateRecipeActivity : AppCompatActivity() {
         if (receta.estado != ESTADO_BORRADOR_LOCAL) {
             return IngredientManager.obtenerIngredientes(receta.id)
         }
-
-        return LocalDraftManager.obtenerTodos(this)
+        return (LocalDraftManager.obtenerTodos(this)
             .find { it.recipe.id == receta.id }
             ?.ingredientes
-            ?: emptyList()
+            ?: emptyList()) as List<Ingredient>
     }
 
     private suspend fun obtenerPasosDeEdicion(receta: Recipe): List<Step> {
         if (receta.estado != ESTADO_BORRADOR_LOCAL) {
             return StepManager.obtenerPasos(receta.id)
         }
-
-        return LocalDraftManager.obtenerTodos(this)
+        return (LocalDraftManager.obtenerTodos(this)
             .find { it.recipe.id == receta.id }
             ?.pasos
-            ?: emptyList()
+            ?: emptyList()) as List<Step>
     }
 
     private fun pintarIngredientes(ingredientes: List<Ingredient>) {
@@ -267,6 +265,11 @@ class CreateRecipeActivity : AppCompatActivity() {
             return
         }
 
+        if (recetaEnEdicion?.estado == ESTADO_BORRADOR_LOCAL) {
+            mostrarDialogoEliminarBorrador()
+            return
+        }
+
         mostrarDialogoGuardarBorrador()
     }
 
@@ -289,6 +292,26 @@ class CreateRecipeActivity : AppCompatActivity() {
             .setMessage("Tienes cambios sin guardar. Puedes guardar un borrador para publicarlo luego o salir sin guardar.")
             .setPositiveButton("Guardar borrador (Local)") { _, _ -> guardarComoBorrador() }
             .setNegativeButton("Salir sin guardar") { _, _ -> NavigationHelper.volverARecetas(this@CreateRecipeActivity) }
+            .setNeutralButton("Seguir editando") { dialog, _ -> dialog.dismiss() }
+            .setCancelable(false)
+            .show()
+    }
+
+    private fun mostrarDialogoEliminarBorrador() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Opciones del borrador")
+            .setMessage("¿Qué deseas hacer con este borrador?")
+            .setPositiveButton("Guardar cambios") { _, _ -> guardarComoBorrador() }
+            .setNegativeButton("Eliminar borrador") { _, _ ->
+                val idBorrador = recetaEnEdicion?.id
+                if (!idBorrador.isNullOrBlank()) {
+                    LocalDraftManager.eliminarBorrador(this@CreateRecipeActivity, idBorrador)
+                    mostrarMensaje("Borrador eliminado permanentemente")
+                }
+
+                // 🌟 CAMBIO CLAVE: finish() cierra esta pantalla y te devuelve a tu perfil limpio
+                finish()
+            }
             .setNeutralButton("Seguir editando") { dialog, _ -> dialog.dismiss() }
             .setCancelable(false)
             .show()
@@ -676,7 +699,10 @@ class CreateRecipeActivity : AppCompatActivity() {
             val bitmap = ajustarImagen(selectedMediaUri!!, IMAGE_MAX_SIZE) ?: return null
             val stream = ByteArrayOutputStream()
             bitmap.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, stream)
-            return RecipeManager.subirImagen("receta_${System.currentTimeMillis()}.jpg", stream.toByteArray())
+            val nuevaUrl =  RecipeManager.subirImagen("receta_${System.currentTimeMillis()}.jpg", stream.toByteArray())
+            if (nuevaUrl != null) { eliminarImagenAnteriorSiAplica(nuevaUrl) }
+
+            return nuevaUrl
         }
 
         if (recetaEnEdicion?.estado == ESTADO_BORRADOR_LOCAL && recetaEnEdicion?.imagenUrl?.isNotBlank() == true) {
@@ -684,6 +710,16 @@ class CreateRecipeActivity : AppCompatActivity() {
         }
 
         return recetaEnEdicion?.imagenUrl
+    }
+
+    private suspend fun eliminarImagenAnteriorSiAplica(nuevaUrl: String) {
+        val imagenAnterior = recetaEnEdicion?.imagenUrl.orEmpty()
+
+        if (imagenAnterior.isBlank()) return
+        if (imagenAnterior == nuevaUrl) return
+        if (!imagenAnterior.contains("/storage/v1/object/public/image/")) return
+
+        RecipeManager.eliminarImagen(imagenAnterior)
     }
 
     private suspend fun subirImagenDeBorradorLocal(path: String): String? {

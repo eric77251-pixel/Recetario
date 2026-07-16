@@ -38,7 +38,7 @@ object StepManager {
                 .get()
                 .await()
                 .toObjects(Step::class.java)
-                .sortedBy { it.numero } // 👈 ordenamos en Kotlin en vez de Firestore
+                .sortedBy { it.numero }
 
         } catch (e: Exception) {
 

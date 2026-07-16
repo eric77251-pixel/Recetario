@@ -38,7 +38,6 @@ class DraftRecipesFragment : Fragment() {
         recyclerDraftRecipes = view.findViewById(R.id.recyclerDraftRecipes)
         txtEmptyDraftRecipes = view.findViewById(R.id.txtEmptyDraftRecipes)
 
-        // 🌟 CAMBIO CLAVE: Un borrador ahora se abre directamente en modo edición
         adapter = ProfileRecipeAdapter(draftRecipes) { recipe ->
             val intent = Intent(requireContext(), CreateRecipeActivity::class.java).apply {
                 putExtra("EXTRA_RECETA_EDITAR", recipe)

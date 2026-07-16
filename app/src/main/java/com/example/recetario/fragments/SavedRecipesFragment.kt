@@ -19,6 +19,7 @@ import com.example.recetario.data.SavedRecipeManager
 import com.example.recetario.model.Recipe
 import com.example.recetario.utils.NetworkUtils
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 class SavedRecipesFragment : Fragment() {
@@ -28,6 +29,7 @@ class SavedRecipesFragment : Fragment() {
     private lateinit var adapter: ProfileRecipeAdapter
 
     private val savedRecipes = mutableListOf<Recipe>()
+    private var cargarGuardadasJob: Job? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -47,7 +49,6 @@ class SavedRecipesFragment : Fragment() {
             (activity as? ProfileActivity)?.abrirDetalle(recipe)
         }
 
-        // Adaptar columnas: 3 en horizontal, 2 en vertical
         val columnas = if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) 3 else 2
         recyclerSavedRecipes.layoutManager = GridLayoutManager(requireContext(), columnas)
         recyclerSavedRecipes.adapter = adapter
@@ -63,32 +64,34 @@ class SavedRecipesFragment : Fragment() {
         }
     }
 
-    /**
-     * Carga las recetas guardadas del usuario autenticado y actualiza el contador del perfil.
-     */
+    override fun onDestroyView() {
+        cargarGuardadasJob?.cancel()
+        super.onDestroyView()
+    }
+
     private fun cargarRecetasGuardadas() {
         if (!NetworkUtils.hayConexion(requireContext())) {
             Toast.makeText(requireContext(), "Sin conexión. No se pudieron cargar guardadas.", Toast.LENGTH_SHORT).show()
             return
         }
 
-        viewLifecycleOwner.lifecycleScope.launch {
+        cargarGuardadasJob?.cancel()
+        cargarGuardadasJob = viewLifecycleOwner.lifecycleScope.launch {
             val usuario = FirebaseAuth.getInstance().currentUser ?: return@launch
             val favoritos = SavedRecipeManager.obtenerFavoritos(usuario.uid)
-
-            savedRecipes.clear()
-
-            val recetasAgregadas = mutableSetOf<String>()
+            val recetasActualizadas = mutableListOf<Recipe>()
+            val recetaIdsVistos = mutableSetOf<String>()
 
             for (favorito in favoritos) {
+                if (!recetaIdsVistos.add(favorito.recetaId)) {
+                    continue
+                }
+
                 val receta = RecipeManager.obtenerReceta(favorito.recetaId)
 
                 if (receta != null) {
                     receta.id = favorito.recetaId
-
-                    if (recetasAgregadas.add(receta.id)) {
-                        savedRecipes.add(receta)
-                    }
+                    recetasActualizadas.add(receta)
                 } else {
                     SavedRecipeManager.eliminarFavorito(
                         favorito.usuarioId,
@@ -96,6 +99,9 @@ class SavedRecipesFragment : Fragment() {
                     )
                 }
             }
+
+            savedRecipes.clear()
+            savedRecipes.addAll(recetasActualizadas)
 
             adapter.notifyDataSetChanged()
             txtEmptySavedRecipes.visibility = if (savedRecipes.isEmpty()) View.VISIBLE else View.GONE

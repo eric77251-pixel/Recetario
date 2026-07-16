@@ -15,15 +15,13 @@ object SavedRecipeManager {
                 return false
             }
 
-            val idDirecto = "${savedRecipe.usuarioId}_${savedRecipe.recetaId}"
-            val favoritoConId = savedRecipe.copy(id = idDirecto)
+            val idFavorito = crearIdFavorito(savedRecipe.usuarioId, savedRecipe.recetaId)
+            val favorito = savedRecipe.copy(id = idFavorito)
 
             coleccion
-                .document(idDirecto)
-                .set(favoritoConId)
+                .document(idFavorito)
+                .set(favorito)
                 .await()
-
-            eliminarDuplicados(savedRecipe.usuarioId, savedRecipe.recetaId, idDirecto)
 
             true
         } catch (e: Exception) {
@@ -41,10 +39,10 @@ object SavedRecipeManager {
                 return false
             }
 
-            val idDirecto = "${usuarioId}_${recetaId}"
+            val idFavorito = crearIdFavorito(usuarioId, recetaId)
 
             coleccion
-                .document(idDirecto)
+                .document(idFavorito)
                 .delete()
                 .await()
 
@@ -74,8 +72,8 @@ object SavedRecipeManager {
                 return false
             }
 
-            val idDirecto = "${usuarioId}_${recetaId}"
-            val favoritoDirecto = coleccion.document(idDirecto).get().await()
+            val idFavorito = crearIdFavorito(usuarioId, recetaId)
+            val favoritoDirecto = coleccion.document(idFavorito).get().await()
 
             if (favoritoDirecto.exists()) {
                 return true
@@ -84,7 +82,6 @@ object SavedRecipeManager {
             val resultado = coleccion
                 .whereEqualTo("usuarioId", usuarioId)
                 .whereEqualTo("recetaId", recetaId)
-                .limit(1)
                 .get()
                 .await()
 
@@ -105,12 +102,11 @@ object SavedRecipeManager {
                 .whereEqualTo("usuarioId", usuarioId)
                 .get()
                 .await()
-                .documents
 
-            val favoritos = mutableListOf<SavedRecipe>()
+            val favoritosValidos = mutableListOf<SavedRecipe>()
             val recetaIdsVistos = mutableSetOf<String>()
 
-            for (documento in documentos) {
+            for (documento in documentos.documents) {
                 val favorito = documento.toObject(SavedRecipe::class.java) ?: continue
 
                 if (favorito.recetaId.isBlank()) {
@@ -118,39 +114,30 @@ object SavedRecipeManager {
                     continue
                 }
 
-                if (recetaIdsVistos.add(favorito.recetaId)) {
-                    favoritos.add(
-                        favorito.copy(
-                            id = if (favorito.id.isBlank()) documento.id else favorito.id
-                        )
-                    )
-                } else {
+                val idCorrecto = crearIdFavorito(favorito.usuarioId, favorito.recetaId)
+
+                if (!recetaIdsVistos.add(favorito.recetaId)) {
+                    documento.reference.delete().await()
+                    continue
+                }
+
+                val favoritoNormalizado = favorito.copy(id = idCorrecto)
+                favoritosValidos.add(favoritoNormalizado)
+
+                if (documento.id != idCorrecto) {
+                    coleccion.document(idCorrecto).set(favoritoNormalizado).await()
                     documento.reference.delete().await()
                 }
             }
 
-            favoritos
+            favoritosValidos
         } catch (e: Exception) {
             e.printStackTrace()
             emptyList()
         }
     }
 
-    private suspend fun eliminarDuplicados(
-        usuarioId: String,
-        recetaId: String,
-        idPermitido: String
-    ) {
-        val documentos = coleccion
-            .whereEqualTo("usuarioId", usuarioId)
-            .whereEqualTo("recetaId", recetaId)
-            .get()
-            .await()
-
-        for (documento in documentos.documents) {
-            if (documento.id != idPermitido) {
-                documento.reference.delete().await()
-            }
-        }
+    private fun crearIdFavorito(usuarioId: String, recetaId: String): String {
+        return "${usuarioId}_${recetaId}"
     }
 }

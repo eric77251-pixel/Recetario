@@ -96,6 +96,7 @@ class RecipeDetailFragment : Fragment() {
         btnResetChecklist = view.findViewById(R.id.btnResetChecklist)
         txtProceso = view.findViewById(R.id.txtProceso)
         btnFavorito = view.findViewById(R.id.btnFavorito)
+        btnFavorito.isEnabled = false
         btnVolverDetalle = view.findViewById(R.id.btnVolverDetalle)
         btnEditarReceta = view.findViewById(R.id.btnEditarReceta)
         btnEliminarReceta = view.findViewById(R.id.btnEliminarReceta)
@@ -164,8 +165,15 @@ class RecipeDetailFragment : Fragment() {
 
     private suspend fun cargarEstadoFavorito(receta: Recipe) {
         val usuarioActual = FirebaseAuth.getInstance().currentUser ?: return
+
+        if (receta.id.isBlank()) {
+            btnFavorito.isEnabled = false
+            return
+        }
+
         esFavorito = SavedRecipeManager.esFavorito(usuarioActual.uid, receta.id)
         actualizarBotonFavorito()
+        btnFavorito.isEnabled = true
     }
 
     private fun formatearListaPasos(pasos: List<Step>): String {
@@ -309,6 +317,11 @@ class RecipeDetailFragment : Fragment() {
             return
         }
 
+        if (receta.id.isBlank()) {
+            mostrarMensaje("No se pudo identificar la receta.")
+            return
+        }
+
         if (!NetworkUtils.hayConexion(requireContext())) {
             mostrarMensaje("Sin conexión. Intente nuevamente.", Toast.LENGTH_LONG)
             return
@@ -327,13 +340,9 @@ class RecipeDetailFragment : Fragment() {
     }
 
     private suspend fun guardarEstadoFavorito(usuarioId: String, receta: Recipe) {
-        if (receta.id.isBlank()) {
-            mostrarMensaje("No se pudo identificar la receta.")
-            btnFavorito.isEnabled = true
-            return
-        }
+        val estabaGuardada = SavedRecipeManager.esFavorito(usuarioId, receta.id)
 
-        val correcto = if (esFavorito) {
+        val correcto = if (estabaGuardada) {
             SavedRecipeManager.eliminarFavorito(usuarioId, receta.id)
         } else {
             SavedRecipeManager.agregarFavorito(
@@ -346,13 +355,13 @@ class RecipeDetailFragment : Fragment() {
         }
 
         if (correcto) {
-            esFavorito = !esFavorito
+            esFavorito = !estabaGuardada
             actualizarBotonFavorito()
 
-            if (esFavorito) {
-                mostrarMensaje("Receta guardada.")
-            } else {
+            if (estabaGuardada) {
                 mostrarMensaje("Receta quitada de guardados.")
+            } else {
+                mostrarMensaje("Receta guardada.")
             }
         } else {
             mostrarMensaje("No se pudo actualizar guardados.")

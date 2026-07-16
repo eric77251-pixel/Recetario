@@ -5,7 +5,6 @@ import com.example.recetario.model.Recipe
 import com.google.firebase.firestore.FirebaseFirestore
 import io.github.jan.supabase.storage.storage
 import kotlinx.coroutines.tasks.await
-
 object RecipeManager {
 
     private val db = FirebaseFirestore.getInstance()

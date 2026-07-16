@@ -37,8 +37,13 @@ object RecipeManager {
 
     suspend fun obtenerReceta(id: String): Recipe? {
         return try {
-            recetas.document(id).get().await()
-                .toObject(Recipe::class.java)
+            val documento = recetas.document(id).get().await()
+
+            val receta = documento.toObject(Recipe::class.java)
+                ?: return null
+
+            receta.id = documento.id
+            receta
         } catch (e: Exception) {
             e.printStackTrace()
             null

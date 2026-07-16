@@ -31,13 +31,14 @@ object SavedRecipeManager {
         usuarioId: String,
         recetaId: String
     ): Boolean {
-
         return try {
+            if (usuarioId.isBlank() || recetaId.isBlank()) {
+                return false
+            }
 
             val idDirecto = "${usuarioId}_${recetaId}"
 
-            coleccion
-                .document(idDirecto)
+            coleccion.document(idDirecto)
                 .delete()
                 .await()
 

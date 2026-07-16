@@ -328,6 +328,12 @@ class RecipeDetailFragment : Fragment() {
     }
 
     private suspend fun guardarEstadoFavorito(usuarioId: String, receta: Recipe) {
+        if (receta.id.isBlank()) {
+            mostrarMensaje("No se pudo identificar la receta.")
+            btnFavorito.isEnabled = true
+            return
+        }
+
         val correcto = if (esFavorito) {
             SavedRecipeManager.eliminarFavorito(usuarioId, receta.id)
         } else {

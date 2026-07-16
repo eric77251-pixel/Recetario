@@ -58,9 +58,7 @@ class SavedRecipesFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        if (::adapter.isInitialized) {
-            cargarRecetasGuardadas()
-        }
+        cargarRecetasGuardadas()
     }
 
     /**
@@ -68,7 +66,7 @@ class SavedRecipesFragment : Fragment() {
      */
     private fun cargarRecetasGuardadas() {
         if (!NetworkUtils.hayConexion(requireContext())) {
-            Toast.makeText(requireContext(), "Sin conexión. No se pudieron cargar guardadas.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Sin conexión", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -80,8 +78,15 @@ class SavedRecipesFragment : Fragment() {
 
             for (favorito in favoritos) {
                 val receta = RecipeManager.obtenerReceta(favorito.recetaId)
+
                 if (receta != null) {
+                    receta.id = favorito.recetaId
                     savedRecipes.add(receta)
+                } else {
+                    SavedRecipeManager.eliminarFavorito(
+                        favorito.usuarioId,
+                        favorito.recetaId
+                    )
                 }
             }
 

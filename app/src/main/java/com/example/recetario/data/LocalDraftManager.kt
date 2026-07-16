@@ -11,8 +11,6 @@ import com.example.recetario.model.Recipe
 import com.example.recetario.model.Step
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.FileOutputStream
@@ -27,7 +25,6 @@ data class DraftData(
 
 object LocalDraftManager {
     private const val PREFS_NAME = "MisBorradoresLocales"
-
     private val jsonParser = Json { ignoreUnknownKeys = true }
 
     private fun getKeyUsuario(): String {
@@ -57,7 +54,8 @@ object LocalDraftManager {
         }
 
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        prefs.edit().putString(getKeyUsuario(), jsonParser.encodeToString(borradores)).apply()
+        // CAMBIO CLAVE: commit() asegura que se guarde de forma síncrona
+        prefs.edit().putString(getKeyUsuario(), jsonParser.encodeToString(borradores)).commit()
     }
 
     fun obtenerTodos(context: Context): List<DraftData> {
@@ -70,17 +68,28 @@ object LocalDraftManager {
         }
     }
 
-    fun eliminarBorrador(context: Context, id: String) {
+    // CAMBIO CLAVE: Devuelve Boolean para confirmar que se eliminó
+    fun eliminarBorrador(context: Context, id: String): Boolean {
         val borradores = obtenerTodos(context).toMutableList()
-        val borrador = borradores.find { it.recipe.id == id }
+        val tamañoInicial = borradores.size
 
+        val borrador = borradores.find { it.recipe.id == id }
         borrador?.recipe?.imagenUrl?.let { ruta ->
             if (ruta.isNotBlank()) File(ruta).delete()
         }
 
+        // Remueve el borrador de la lista
         borradores.removeAll { it.recipe.id == id }
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        prefs.edit().putString(getKeyUsuario(), jsonParser.encodeToString(borradores)).apply()
+
+        // Si el tamaño cambió, significa que SÍ lo encontró y lo destruyó
+        if (borradores.size < tamañoInicial) {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            // CAMBIO CLAVE: commit() bloquea la app milisegundos hasta que se borre de verdad
+            prefs.edit().putString(getKeyUsuario(), jsonParser.encodeToString(borradores)).commit()
+            return true
+        }
+
+        return false
     }
 
     private fun guardarImagenLocal(context: Context, uri: Uri, id: String): String {

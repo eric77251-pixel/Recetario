@@ -105,7 +105,7 @@ object RecipeManager {
                 upsert = true
             }
 
-            bucket.publicUrl(nombreArchivo)
+            bucket.publicUrl("receta/$nombreArchivo")
 
         } catch (e: Exception) {
             e.printStackTrace()

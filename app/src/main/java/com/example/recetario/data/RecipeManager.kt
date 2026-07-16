@@ -5,6 +5,7 @@ import com.example.recetario.model.Recipe
 import com.google.firebase.firestore.FirebaseFirestore
 import io.github.jan.supabase.storage.storage
 import kotlinx.coroutines.tasks.await
+import com.example.recetario.data.RecipeManager
 
 object RecipeManager {
 
@@ -98,7 +99,7 @@ object RecipeManager {
             val bucket = SupabaseClientProvider.client.storage.from("image")
 
             bucket.upload(
-                path = nombreArchivo,
+                path = "receta/$nombreArchivo",
                 data = bytesImagen
             ) {
                 upsert = true
@@ -110,5 +111,33 @@ object RecipeManager {
             e.printStackTrace()
             null
         }
+    }
+
+    suspend fun eliminarImagen(urlImagen: String): Boolean {
+        return try {
+            if (urlImagen.isBlank()) return true
+
+            val path = obtenerPathImagenDesdeUrl(urlImagen)
+
+            if (path.isBlank()) return true
+
+            val bucket = SupabaseClientProvider.client.storage.from("image")
+
+            bucket.delete(path)
+
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    private fun obtenerPathImagenDesdeUrl(urlImagen: String): String {
+        val marcador = "/storage/v1/object/public/image/"
+        val indice = urlImagen.indexOf(marcador)
+
+        if (indice == -1) return ""
+
+        return urlImagen.substring(indice + marcador.length)
     }
 }

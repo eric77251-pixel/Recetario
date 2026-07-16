@@ -652,7 +652,10 @@ class CreateRecipeActivity : AppCompatActivity() {
             val bitmap = ajustarImagen(selectedMediaUri!!, IMAGE_MAX_SIZE) ?: return null
             val stream = ByteArrayOutputStream()
             bitmap.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, stream)
-            return RecipeManager.subirImagen("receta_${System.currentTimeMillis()}.jpg", stream.toByteArray())
+            val nuevaUrl =  RecipeManager.subirImagen("receta_${System.currentTimeMillis()}.jpg", stream.toByteArray())
+            if (nuevaUrl != null) { eliminarImagenAnteriorSiAplica(nuevaUrl) }
+
+            return nuevaUrl
         }
 
         if (recetaEnEdicion?.estado == ESTADO_BORRADOR_LOCAL && recetaEnEdicion?.imagenUrl?.isNotBlank() == true) {
@@ -660,6 +663,16 @@ class CreateRecipeActivity : AppCompatActivity() {
         }
 
         return recetaEnEdicion?.imagenUrl
+    }
+
+    private suspend fun eliminarImagenAnteriorSiAplica(nuevaUrl: String) {
+        val imagenAnterior = recetaEnEdicion?.imagenUrl.orEmpty()
+
+        if (imagenAnterior.isBlank()) return
+        if (imagenAnterior == nuevaUrl) return
+        if (!imagenAnterior.contains("/storage/v1/object/public/image/")) return
+
+        RecipeManager.eliminarImagen(imagenAnterior)
     }
 
     private suspend fun subirImagenDeBorradorLocal(path: String): String? {
